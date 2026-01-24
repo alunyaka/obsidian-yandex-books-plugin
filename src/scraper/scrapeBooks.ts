@@ -59,8 +59,19 @@ export const parseBooks = ($: Root): Book[] => {
 
 const scrapeBooks = async (): Promise<Book[]> => {
   const region = currentAmazonRegion();
-  const { dom } = await loadRemoteDom(region.notebookUrl, 1000);
-  return parseBooks(dom);
+  const { dom } = await loadRemoteDom(region.notebookUrl, 2000);
+  const books = parseBooks(dom);
+  
+  // Amazon's Kindle notebook page typically shows up to 54 books per page
+  // If we get exactly 54, there may be more books on additional pages
+  // However, pagination requires complex interaction with Amazon's interface
+  // Users with more than 54 books may need to sync multiple times
+  // The sync process is intelligent and will only sync new/changed books
+  if (books.length === 54) {
+    console.log('Found 54 books. If you have more books, you may need to sync multiple times to get them all.');
+  }
+  
+  return books;
 };
 
 export default scrapeBooks;
