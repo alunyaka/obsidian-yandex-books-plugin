@@ -17,6 +17,9 @@ export default class AmazonLogoutModal {
       parent: remote.getCurrentWindow(),
       width: 450,
       height: 730,
+      webPreferences: {
+        partition: 'persist:kindle-highlights',
+      },
       show: false,
     });
 

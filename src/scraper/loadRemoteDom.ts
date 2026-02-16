@@ -15,6 +15,7 @@ export const loadRemoteDom = async (targetUrl: string, timeout = 0): Promise<Dom
     webPreferences: {
       webSecurity: false,
       nodeIntegration: false,
+      partition: 'persist:kindle-highlights',
     },
     show: false,
   });
