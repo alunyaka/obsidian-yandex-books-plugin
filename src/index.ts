@@ -44,10 +44,6 @@ export default class KindlePlugin extends Plugin {
 
     registerNotifications();
     this.registerEvents();
-
-    if (get(settingsStore).syncOnBoot) {
-      await this.startAmazonSync();
-    }
   }
 
   private registerEvents(): void {
@@ -70,7 +66,10 @@ export default class KindlePlugin extends Plugin {
       })
     );
 
-    this.app.workspace.onLayoutReady(() => {
+    this.app.workspace.onLayoutReady(async () => {
+    if (get(settingsStore).syncOnBoot) {
+      await this.startAmazonSync();
+    }
       ee.emit('obsidianReady');
     });
   }
