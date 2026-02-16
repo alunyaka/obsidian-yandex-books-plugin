@@ -22,6 +22,7 @@ type CommonTemplateVariables = AuthorsTemplateVariables & {
 type FileNameTemplateVariables = CommonTemplateVariables & {
   shortTitle: string; // TODO: Eventually deprecate
   publicationDate?: string;
+  lastAnnotatedDate?: string;
 };
 
 type FileTemplateVariables = CommonTemplateVariables & {
@@ -76,6 +77,7 @@ export const commonTemplateVariables = (book: Partial<Book>): FileNameTemplateVa
     title: shortenTitle(book.title),
     shortTitle: shortenTitle(book.title),
     longTitle: book.title,
+    lastAnnotatedDate: moment(book.lastAnnotatedDate).format('YYYY-MM-DD').toString(),
     ...authorsTemplateVariables(book.author),
   };
 };
