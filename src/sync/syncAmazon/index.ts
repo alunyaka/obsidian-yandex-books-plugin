@@ -79,6 +79,12 @@ export default class SyncAmazon {
         await this.syncManager.syncBook(book, highlights);
 
         ee.emit('syncBookSuccess', book, highlights);
+        
+        // Add a small delay between books to prevent overwhelming Obsidian
+        // This helps with performance and prevents the vault from becoming unresponsive
+        if (index < books.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
       } catch (error) {
         console.error('Error syncing book', book, error);
         ee.emit('syncBookFailure', book, String(error));

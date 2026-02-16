@@ -1,4 +1,4 @@
-import { addIcon, Plugin } from 'obsidian';
+import { addIcon, Notice, Plugin } from 'obsidian';
 import { get } from 'svelte/store';
 
 import kindleIcon from '~/assets/kindleIcon.svg';
@@ -40,10 +40,34 @@ export default class KindlePlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: 'kindle-migrate-properties',
+      name: 'Migrate properties to new format',
+      callback: async () => {
+        await this.migrateProperties();
+      },
+    });
+
     this.addSettingTab(new SettingsTab(this.app, this, this.fileManager));
 
     registerNotifications();
     this.registerEvents();
+
+    // Check for sync on boot asynchronously to prevent blocking
+    // Use setTimeout to defer this check until after initialization completes
+    setTimeout(() => {
+      try {
+        if (get(settingsStore).syncOnBoot) {
+          // Don't await - let it run in background
+          this.startAmazonSync().catch((error) => {
+            console.error('Error during sync on boot:', error);
+          });
+        }
+      } catch (error) {
+        // Silently fail if settings store isn't ready yet
+        console.warn('Settings store not ready for sync on boot check:', error);
+      }
+    }, 100);
   }
 
   private registerEvents(): void {
@@ -66,10 +90,7 @@ export default class KindlePlugin extends Plugin {
       })
     );
 
-    this.app.workspace.onLayoutReady(async () => {
-    if (get(settingsStore).syncOnBoot) {
-      await this.startAmazonSync();
-    }
+    this.app.workspace.onLayoutReady(() => {
       ee.emit('obsidianReady');
     });
   }
@@ -83,6 +104,33 @@ export default class KindlePlugin extends Plugin {
 
   private async startAmazonSync(): Promise<void> {
     await this.syncAmazon.startSync();
+  }
+
+  private async migrateProperties(): Promise<void> {
+    new Notice('Starting property migration...', 2000);
+    
+    try {
+      const result = await this.fileManager.migrateToFlatProperties();
+      
+      if (result.migrated > 0) {
+        new Notice(
+          `Migration complete: ${result.migrated} file(s) migrated${result.failed > 0 ? `, ${result.failed} failed` : ''}`,
+          5000
+        );
+        
+        if (result.errors.length > 0) {
+          console.warn('Migration errors:', result.errors);
+        }
+      } else if (result.failed > 0) {
+        new Notice(`Migration failed for ${result.failed} file(s). Check console for details.`, 5000);
+        console.error('Migration errors:', result.errors);
+      } else {
+        new Notice('No files need migration. All files are already in the new format.', 3000);
+      }
+    } catch (error) {
+      new Notice(`Migration error: ${String(error)}`, 5000);
+      console.error('Migration error:', error);
+    }
   }
 
   public onunload(): void {
