@@ -23,3 +23,6 @@ tsconfig.tsbuildinfo
 
 # Mac
 .DS_Store
+
+# AI agent working state
+.sisyphus
