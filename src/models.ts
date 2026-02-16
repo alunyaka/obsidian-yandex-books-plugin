@@ -45,7 +45,8 @@ export type AmazonAccountRegion =
   | 'italy'
   | 'UK'
   | 'france'
-  | 'netherlands';
+  | 'netherlands'
+  | 'canada';
 
 export type AmazonAccount = {
   name: string;
