@@ -4,11 +4,10 @@ import { get } from 'svelte/store';
 
 import type KindlePlugin from '~/.';
 import { AmazonRegions, orderedAmazonRegions } from '~/amazonRegion';
-import AmazonLogoutModal from '~/components/amazonLogoutModal';
 import { ee } from '~/eventEmitter';
 import type FileManager from '~/fileManager';
 import type { AmazonAccountRegion } from '~/models';
-import { scrapeLogoutUrl } from '~/scraper';
+import { clearSessionData } from '~/scraper';
 import { settingsStore } from '~/store';
 
 import TemplateEditorModal from './templateEditorModal';
@@ -80,14 +79,7 @@ export class SettingsTab extends PluginSettingTab {
             ee.emit('startLogout');
 
             try {
-              const signout = await scrapeLogoutUrl();
-
-              // User is still logged in
-              if (signout.isStillLoggedIn) {
-                const modal = new AmazonLogoutModal(signout.url);
-                await modal.doLogout();
-              }
-
+              await clearSessionData();
               settingsStore.actions.logout();
             } catch (error) {
               console.error('Error when trying to logout', error);

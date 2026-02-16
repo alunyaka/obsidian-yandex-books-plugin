@@ -23,6 +23,9 @@ export default class AmazonLoginModal {
       parent: remote.getCurrentWindow(),
       width: 450,
       height: 730,
+      webPreferences: {
+        partition: 'persist:kindle-highlights',
+      },
       show: false,
     });
 

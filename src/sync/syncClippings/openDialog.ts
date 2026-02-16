@@ -1,11 +1,12 @@
 import { remote } from 'electron';
 
-const { dialog } = remote;
+const dialog: Electron.Dialog = remote.dialog;
+const getCurrentWindow: () => Electron.BrowserWindow = remote.getCurrentWindow;
 
 type DialogResponse = [file: string, canceled: boolean];
 
 export const openDialog = async (): Promise<DialogResponse> => {
-  const result = await dialog.showOpenDialog(remote.getCurrentWindow(), {
+  const result = await dialog.showOpenDialog(getCurrentWindow(), {
     filters: [{ name: 'Text file', extensions: ['txt'] }],
     properties: ['openFile'],
   });

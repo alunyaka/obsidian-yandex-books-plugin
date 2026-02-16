@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-import type { Book, BookHighlight, Highlight } from '~/models';
+import type { Book, BookHighlight, BookMetadata, Highlight } from '~/models';
 import { parseAuthors, shortenTitle } from '~/utils';
 
 import { generateAppLink } from './utils';
@@ -21,6 +21,8 @@ type CommonTemplateVariables = AuthorsTemplateVariables & {
 
 type FileNameTemplateVariables = CommonTemplateVariables & {
   shortTitle: string; // TODO: Eventually deprecate
+  publicationDate?: string;
+  lastAnnotatedDate?: string;
 };
 
 type FileTemplateVariables = CommonTemplateVariables & {
@@ -75,12 +77,19 @@ export const commonTemplateVariables = (book: Partial<Book>): FileNameTemplateVa
     title: shortenTitle(book.title),
     shortTitle: shortenTitle(book.title),
     longTitle: book.title,
+    lastAnnotatedDate: moment(book.lastAnnotatedDate).format('YYYY-MM-DD').toString(),
     ...authorsTemplateVariables(book.author),
   };
 };
 
-export const fileNameTemplateVariables = (book: Partial<Book>): FileNameTemplateVariables => {
-  return commonTemplateVariables(book);
+export const fileNameTemplateVariables = (
+  book: Partial<Book>,
+  metadata: Partial<BookMetadata>
+): FileNameTemplateVariables => {
+  return {
+    publicationDate: metadata?.publicationDate,
+    ...commonTemplateVariables(book),
+  };
 };
 
 export const highlightTemplateVariables = (

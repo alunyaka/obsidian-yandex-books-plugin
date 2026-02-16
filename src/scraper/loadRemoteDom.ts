@@ -6,7 +6,6 @@ const { BrowserWindow: RemoteBrowserWindow } = remote;
 type DomResult = {
   dom: Root;
   didNavigateUrl: string;
-  didFinishLoadUrl: string;
 };
 
 export const loadRemoteDom = async (targetUrl: string, timeout = 0): Promise<DomResult> => {
@@ -16,6 +15,7 @@ export const loadRemoteDom = async (targetUrl: string, timeout = 0): Promise<Dom
     webPreferences: {
       webSecurity: false,
       nodeIntegration: false,
+      partition: 'persist:kindle-highlights',
     },
     show: false,
   });
@@ -30,7 +30,7 @@ export const loadRemoteDom = async (targetUrl: string, timeout = 0): Promise<Dom
       didNavigateUrl = url;
     });
 
-    window.webContents.on('did-finish-load', (_event, url) => {
+    window.webContents.on('did-finish-load', () => {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       Promise.resolve()
         .then(() => {
@@ -53,7 +53,6 @@ export const loadRemoteDom = async (targetUrl: string, timeout = 0): Promise<Dom
           resolveWrapper({
             dom: $,
             didNavigateUrl: didNavigateUrl,
-            didFinishLoadUrl: url as string,
           });
         });
     });

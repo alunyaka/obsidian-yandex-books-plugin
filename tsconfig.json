@@ -4,7 +4,7 @@
   "include": ["src/**/*", "tests/**/*", "webpack.config.ts"],
   "exclude": ["node_modules/*"],
   "compilerOptions": {
-    "types": ["node", "svelte", "jest"],
+    "types": ["node", "svelte", "jest", "electron"],
     "baseUrl": ".",
     "paths": {
       "src": ["src/*", "tests/*"],
