@@ -81,7 +81,7 @@ export default class KindlePlugin extends Plugin {
 
         menu.addItem((item) => {
           item
-            .setTitle('Resync Kindle highlights in file')
+            .setTitle('Kindle: Resync highlights')
             .setIcon('kindle')
             .setDisabled(kindleFile.book.asin == null)
             .onClick(async () => {
@@ -91,7 +91,7 @@ export default class KindlePlugin extends Plugin {
 
         menu.addItem((item) => {
           item
-            .setTitle('Ignore this book')
+            .setTitle('Kindle: Ignore this book')
             .setIcon('eye-off')
             .onClick(() => {
               const title = kindleFile.frontmatter.title;
@@ -104,7 +104,7 @@ export default class KindlePlugin extends Plugin {
 
         menu.addItem((item) => {
           item
-            .setTitle('Ignore and delete this book')
+            .setTitle('Kindle: Ignore and delete this book')
             .setIcon('trash')
             .onClick(async () => {
               const title = kindleFile.frontmatter.title;

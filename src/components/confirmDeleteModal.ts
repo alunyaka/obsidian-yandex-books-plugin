@@ -16,10 +16,10 @@ export class ConfirmDeleteModal extends Modal {
   }
 
   onOpen(): void {
+    this.titleEl.setText('Ignore and delete book');
     const { contentEl } = this;
-    contentEl.createEl('h3', { text: 'Ignore and delete book' });
     contentEl.createEl('p', {
-      text: `"${this.bookTitle}" will be moved to trash and added to your ignore list to prevent re-syncing.`,
+      text: `"${this.bookTitle}" will be moved to trash and added to your Kindle sync ignore list to prevent re-syncing.`,
     });
 
     const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });

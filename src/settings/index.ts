@@ -180,7 +180,7 @@ export class SettingsTab extends PluginSettingTab {
             settingsStore.actions.setIgnoredBooks(books);
           });
         textArea.inputEl.rows = 4;
-        textArea.inputEl.cols = 30;
+        textArea.inputEl.style.width = '100%';
       });
   }
 
