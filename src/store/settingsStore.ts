@@ -15,6 +15,7 @@ type Settings = {
   fileNameTemplate?: string;
   syncOnBoot: boolean;
   downloadBookMetadata: boolean;
+  ignoredBooks: string[];
 
   // Deprecated - delete eventually
   noteTemplate?: string;
@@ -28,6 +29,7 @@ const DEFAULT_SETTINGS: Settings = {
   isLoggedIn: false,
   syncOnBoot: false,
   downloadBookMetadata: true,
+  ignoredBooks: [],
 };
 
 const createSettingsStore = () => {
@@ -157,6 +159,13 @@ const createSettingsStore = () => {
     });
   };
 
+  const setIgnoredBooks = (value: string[]) => {
+    store.update((state) => {
+      state.ignoredBooks = value;
+      return state;
+    });
+  };
+
   return {
     store,
     subscribe: store.subscribe,
@@ -172,6 +181,7 @@ const createSettingsStore = () => {
       setSyncOnBoot,
       setDownloadBookMetadata,
       setAmazonRegion,
+      setIgnoredBooks,
       upgradeStoreState,
     },
   };

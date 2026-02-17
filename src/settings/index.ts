@@ -38,6 +38,7 @@ export class SettingsTab extends PluginSettingTab {
     this.amazonRegion();
     this.downloadBookMetadata();
     this.syncOnBoot();
+    this.ignoredBooks();
     this.sponsorMe();
   }
 
@@ -157,6 +158,28 @@ export class SettingsTab extends PluginSettingTab {
           settingsStore.actions.setSyncOnBoot(value);
         })
       );
+  }
+
+  private ignoredBooks(): void {
+    const currentValue = (get(settingsStore).ignoredBooks ?? []).join('\n');
+
+    new Setting(this.containerEl)
+      .setName('Ignored books')
+      .setDesc('Book titles to exclude from syncing (one per line, case-insensitive)')
+      .addTextArea((textArea) => {
+        textArea
+          .setPlaceholder('Enter book titles, one per line')
+          .setValue(currentValue)
+          .onChange((value) => {
+            const books = value
+              .split('\n')
+              .map((line) => line.trim())
+              .filter((line) => line !== '');
+            settingsStore.actions.setIgnoredBooks(books);
+          });
+        textArea.inputEl.rows = 4;
+        textArea.inputEl.cols = 30;
+      });
   }
 
   private sponsorMe(): void {

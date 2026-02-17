@@ -1,4 +1,7 @@
+import { get } from 'svelte/store';
+
 import { ee } from '~/eventEmitter';
+import { settingsStore } from '~/store';
 import type { SyncManager } from '~/sync';
 
 import { openDialog } from './openDialog';
@@ -21,8 +24,13 @@ export default class SyncKindleClippings {
       ee.emit('syncSessionStart', 'my-clippings');
 
       const bookHighlights = parseBooks(clippingsFile);
+      const ignoredBooks = get(settingsStore).ignoredBooks ?? [];
+      const ignoredLower = ignoredBooks.map((t) => t.toLowerCase().trim()).filter((t) => t !== '');
 
       for (const { book, highlights } of bookHighlights) {
+        if (ignoredLower.length > 0 && ignoredLower.includes(book.title.toLowerCase().trim())) {
+          continue; // Skip ignored books
+        }
         await this.syncManager.syncBook(book, highlights);
       }
 

@@ -18,13 +18,21 @@ export default class SyncManager {
 
   public filterBooksToSync(remoteBooks: Book[]): Book[] {
     const lastSyncDate = get(settingsStore).lastSyncDate;
+    const ignoredBooks = get(settingsStore).ignoredBooks ?? [];
     const vaultBooks = this.fileManager.getKindleFiles();
 
-    return diffBooks(
+    const booksToSync = diffBooks(
       remoteBooks,
       vaultBooks.map((v) => v.book),
       lastSyncDate
     );
+
+    if (ignoredBooks.length === 0) {
+      return booksToSync;
+    }
+
+    const ignoredLower = ignoredBooks.map((t) => t.toLowerCase().trim()).filter((t) => t !== '');
+    return booksToSync.filter((book) => !ignoredLower.includes(book.title.toLowerCase().trim()));
   }
 
   public async syncBook(book: Book, highlights: Highlight[]): Promise<void> {
