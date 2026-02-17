@@ -165,10 +165,12 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .setName('Ignored books')
-      .setDesc('Book titles to exclude from syncing (one per line, case-insensitive)')
+      .setDesc(
+        'Books with titles containing any of these phrases will be skipped during sync. One phrase per line, case-insensitive. Tip: use just the main title without subtitles (e.g. "Words of Radiance" instead of the full Amazon title)'
+      )
       .addTextArea((textArea) => {
         textArea
-          .setPlaceholder('Enter book titles, one per line')
+          .setPlaceholder('e.g.\nWords of Radiance\nAtomic Habits')
           .setValue(currentValue)
           .onChange((value) => {
             const books = value

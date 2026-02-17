@@ -32,7 +32,10 @@ export default class SyncManager {
     }
 
     const ignoredLower = ignoredBooks.map((t) => t.toLowerCase().trim()).filter((t) => t !== '');
-    return booksToSync.filter((book) => !ignoredLower.includes(book.title.toLowerCase().trim()));
+    return booksToSync.filter((book) => {
+      const titleLower = book.title.toLowerCase().trim();
+      return !ignoredLower.some((pattern) => titleLower.includes(pattern));
+    });
   }
 
   public async syncBook(book: Book, highlights: Highlight[]): Promise<void> {

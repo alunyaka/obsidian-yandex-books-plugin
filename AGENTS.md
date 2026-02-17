@@ -16,7 +16,7 @@ Working conventions and decisions for AI-assisted development on this repo.
 | Command         | Expected               |
 | --------------- | ---------------------- |
 | `npm run lint`  | 0 errors (warnings OK) |
-| `npm run test`  | All pass (112 tests)   |
+| `npm run test`  | All pass (127+ tests)  |
 | `npm run build` | `dist/main.js` (~1MB)  |
 | Node version    | 20.x only              |
 
@@ -36,3 +36,4 @@ Working conventions and decisions for AI-assisted development on this repo.
 - **Batch work** (3+ PRs) uses an integration branch, not direct-to-master
 - **Pre-commit hooks** run lint-staged. Never bypass with `--no-verify`
 - **`gh` CLI auth** may differ from SSH auth. Verify with `gh auth status` at session start
+- **Manual validation** required for all new user-facing features. Owner tests locally in Obsidian vault before release.

@@ -6,6 +6,8 @@
 Sync (and resync) your Kindle notes and highlights directly into your [Obsidian][1] vault. You
 can choose to sync using one of two methods:
 
+## Sync Methods
+
 ### Amazon's Kindle Reader
 
 Sync from the cloud any ebooks that you've purchased directly from Amazon. The plugin will
@@ -26,24 +28,36 @@ You can extract your `My Clippings.txt` file by plugging it into your computer u
 
 ## Features
 
-- **Continuous, automatic syncing** — One button press to sync your highlights using your Amazon account via [Amazon's Kindle Reader][4].
-
-  Subsequent syncing will do an intelligent diff and bring in any new highlights without impacting any edits that you've done to your highlights file.
+- **Continuous, automatic syncing** — One button press to sync your highlights using your Amazon account via [Amazon's Kindle Reader][4]. Subsequent syncing will do an intelligent diff and bring in any new highlights without impacting any edits that you've done to your highlights file.
 
 - **Sync non-Amazon books** — Sync your highlights by uploading your `My Clippings.txt` file from your Kindle device
 
-- **Enriched metadata** — Enrich your notes by downloading extra metadata information about your book from Amazon.com
+- **Enriched metadata** — Enrich your notes by downloading extra metadata information about your book from Amazon.com. Can be toggled off in settings to speed up sync.
 
-- **Powerful, flexible templating with preview** — Customise your highlights and file names to your liking by configuring your own template using ([Nunjucks][2]) templating language with live preview
+- **Powerful, flexible templating with preview** — Customise your highlights and file names to your liking by configuring your own template using the [Nunjucks][2] templating language with live preview. Available template variables include `publicationDate`, `lastAnnotatedDate`, `authorUrl`, and more.
 
-## Mission statement
+- **Sync on startup** — Optionally sync your highlights automatically when Obsidian starts (Amazon sync only)
 
-Inspired by Obsidian's principle of "your data sitting in a local folder" and "never leaving
-you're life's work held hostage in the cloud again", this plugin tries to do exactly that
-with your precious Kindle notes and highlights. Why should you struggle in accessing your own
-data, or paying for a third party service to access information that you own?
+- **Obsidian Properties format** — Book metadata is stored using Obsidian's native properties/frontmatter format. A migration command is available for notes created with older versions of the plugin.
 
-## Known considerations
+- **Multiple Amazon regions** — Supports Amazon stores worldwide: Global (amazon.com), Canada, France, Germany/Swiss/Austria, India, Italy, Japan, Netherlands, Spain, and UK
+
+- **Book ignore list** — Exclude specific books from syncing by entering partial titles in settings. You can also right-click any synced book note to quickly ignore it or ignore and delete it.
+
+- **Safe filename handling** — Book titles with special characters are automatically sanitised to work with Obsidian's file system requirements
+
+## Settings
+
+| Setting                    | Description                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| **Amazon region**          | Select your Amazon store region for syncing                                             |
+| **Highlights folder**      | Choose which vault folder to store highlight notes                                      |
+| **Templates**              | Customise file name, file content, and highlight templates                              |
+| **Download book metadata** | Toggle extra metadata downloads from Amazon (cover image, author URL, publication date) |
+| **Sync on startup**        | Automatically sync when Obsidian starts                                                 |
+| **Ignored books**          | List of book title phrases to exclude from syncing (partial match, case-insensitive)    |
+
+## Known Considerations
 
 ### Security
 
@@ -54,10 +68,10 @@ any other plugin across your vaults until your session expires.
 You can mitigate this risk by logging out after every sync (from settings) or using the offline
 method of syncing by uploading your `My Clippings.txt` file instead.
 
-### Export limits
+### Export Limits
 
 For several reasons (see [here][5] and [here][6]) the Kindle platform can sometimes limit the amount
-of highlighted text that can be exported from a particular book. This limit varies from book to book, purchased from Amazon or have DRM protection. There is currently no known alternative to work around this.
+of highlighted text that can be exported from a particular book. This limit varies from book to book and depends on whether the book was purchased from Amazon or has DRM protection. There is currently no known alternative to work around this.
 
 ## Say Thanks
 

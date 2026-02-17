@@ -2,6 +2,7 @@ import { addIcon, Notice, Plugin } from 'obsidian';
 import { get } from 'svelte/store';
 
 import kindleIcon from '~/assets/kindleIcon.svg';
+import { ConfirmDeleteModal } from '~/components/confirmDeleteModal';
 import SyncModal from '~/components/syncModal';
 import { ee } from '~/eventEmitter';
 import FileManager from '~/fileManager';
@@ -85,6 +86,42 @@ export default class KindlePlugin extends Plugin {
             .setDisabled(kindleFile.book.asin == null)
             .onClick(async () => {
               await this.syncAmazon.resync(kindleFile);
+            });
+        });
+
+        menu.addItem((item) => {
+          item
+            .setTitle('Ignore this book')
+            .setIcon('eye-off')
+            .onClick(() => {
+              const title = kindleFile.frontmatter.title;
+              const current = get(settingsStore).ignoredBooks ?? [];
+              settingsStore.actions.setIgnoredBooks([...current, title]);
+              console.log('Kindle: Ignored book:', title);
+              new Notice('Book ignored: will be skipped on future syncs');
+            });
+        });
+
+        menu.addItem((item) => {
+          item
+            .setTitle('Ignore and delete this book')
+            .setIcon('trash')
+            .onClick(async () => {
+              const title = kindleFile.frontmatter.title;
+              const modal = new ConfirmDeleteModal(this.app, title);
+              const confirmed = await modal.confirm();
+
+              if (!confirmed) {
+                return;
+              }
+
+              // Add to ignore list BEFORE trash (failsafe)
+              const current = get(settingsStore).ignoredBooks ?? [];
+              settingsStore.actions.setIgnoredBooks([...current, title]);
+
+              await this.app.vault.trash(kindleFile.file, false);
+              console.log('Kindle: Ignored and deleted book:', title, kindleFile.file.path);
+              new Notice('Book deleted and added to ignore list');
             });
         });
       })

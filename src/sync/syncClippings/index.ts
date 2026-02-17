@@ -28,7 +28,8 @@ export default class SyncKindleClippings {
       const ignoredLower = ignoredBooks.map((t) => t.toLowerCase().trim()).filter((t) => t !== '');
 
       for (const { book, highlights } of bookHighlights) {
-        if (ignoredLower.length > 0 && ignoredLower.includes(book.title.toLowerCase().trim())) {
+        const titleLower = book.title.toLowerCase().trim();
+        if (ignoredLower.length > 0 && ignoredLower.some((pattern) => titleLower.includes(pattern))) {
           continue; // Skip ignored books
         }
         await this.syncManager.syncBook(book, highlights);
