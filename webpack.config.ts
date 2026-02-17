@@ -66,6 +66,10 @@ const config: Configuration = {
           from: './manifest.json',
           to: '.',
         },
+        {
+          from: './styles.css',
+          to: '.',
+        },
       ],
     }),
     new DefinePlugin({

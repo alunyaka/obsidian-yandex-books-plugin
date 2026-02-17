@@ -20,12 +20,17 @@ export type SyncModalState = {
     | 'choose-sync-method'
     | 'sync:login'
     | 'sync:fetching-books'
-    | 'sync:syncing';
+    | 'sync:syncing'
+    | 'sync:cancelling'
+    | 'sync:cancelled';
   syncMode?: SyncMode;
   currentJob?: { book: Book; index: number };
   syncError: string | undefined;
   jobs?: Job[] | undefined;
   erroredJobs: JobError[];
+  isCancelling?: boolean;
+  totalBooks?: number;
+  syncedCount?: number;
 };
 
 const InitialState: SyncModalState = {
@@ -50,6 +55,7 @@ const createSyncModalStore = () => {
       ...state,
       status: 'sync:fetching-books',
       jobs: booksToSync.map((book) => ({ book, status: 'idle' })),
+      totalBooks: booksToSync.length,
     }));
   });
 
@@ -100,6 +106,30 @@ const createSyncModalStore = () => {
       ...state,
       erroredJobs: [...state.erroredJobs, { book, reason: message }],
     }));
+  });
+
+  ee.on('syncBookSuccess', () => {
+    store.update((state) => ({
+      ...state,
+      syncedCount: (state.syncedCount ?? 0) + 1,
+    }));
+  });
+
+  ee.on('syncCancelRequested', () => {
+    store.update((state) => ({
+      ...state,
+      isCancelling: true,
+      status: 'sync:cancelling',
+    }));
+  });
+
+  ee.on('syncCancelled', (summary) => {
+    store.set({
+      ...InitialState,
+      status: 'sync:cancelled',
+      syncedCount: summary.syncedCount,
+      totalBooks: summary.totalCount,
+    });
   });
 
   return store;

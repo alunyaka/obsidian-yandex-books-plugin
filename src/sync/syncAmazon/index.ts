@@ -3,24 +3,44 @@ import { ee } from '~/eventEmitter';
 import type { Book, KindleFile } from '~/models';
 import { scrapeBooks, scrapeHighlightsForBook } from '~/scraper';
 import type { SyncManager } from '~/sync';
+import { syncCancellation } from '~/sync/syncCancellation';
 
 export default class SyncAmazon {
   constructor(private syncManager: SyncManager) {}
 
   public async startSync(): Promise<void> {
+    if (syncCancellation.isActive) {
+      console.warn('Kindle: Sync already in progress, ignoring request');
+      return;
+    }
+
+    syncCancellation.start('amazon');
     ee.emit('syncSessionStart', 'amazon');
 
     const success = await this.login();
 
+    if (syncCancellation.isCancelled) {
+      syncCancellation.complete();
+      return;
+    }
+
     if (!success) {
-      return; // Do nothing...
+      syncCancellation.reset();
+      return;
     }
 
     try {
       ee.emit('fetchingBooks');
 
       const remoteBooks = await scrapeBooks();
+
+      if (syncCancellation.isCancelled) {
+        syncCancellation.complete();
+        return;
+      }
+
       const booksToSync = this.syncManager.filterBooksToSync(remoteBooks);
+      syncCancellation.setTotalCount(booksToSync.length);
 
       ee.emit('fetchingBooksSuccess', booksToSync, remoteBooks);
 
@@ -28,20 +48,31 @@ export default class SyncAmazon {
         await this.syncBooks(booksToSync);
       }
 
-      ee.emit('syncSessionSuccess');
+      if (syncCancellation.isCancelled) {
+        syncCancellation.complete();
+      } else {
+        syncCancellation.reset();
+        ee.emit('syncSessionSuccess');
+      }
     } catch (error) {
+      syncCancellation.reset();
       console.error('Error while trying fetch books and to sync', error);
       ee.emit('syncSessionFailure', String(error));
     }
   }
 
   public async resync(file: KindleFile): Promise<void> {
+    if (syncCancellation.isActive) {
+      console.warn('Kindle: Sync already in progress, ignoring resync request');
+      return;
+    }
+
     ee.emit('resyncBook', file);
 
     const success = await this.login();
 
     if (!success) {
-      return; // Do nothing...
+      return;
     }
 
     try {
@@ -72,16 +103,22 @@ export default class SyncAmazon {
 
   private async syncBooks(books: Book[]): Promise<void> {
     for (const [index, book] of books.entries()) {
+      if (syncCancellation.isCancelled) {
+        break;
+      }
+
       try {
         ee.emit('syncBook', book, index);
 
-        const highlights = await scrapeHighlightsForBook(book);
+        const highlights = await scrapeHighlightsForBook(
+          book,
+          () => syncCancellation.isCancelled
+        );
         await this.syncManager.syncBook(book, highlights);
 
+        syncCancellation.incrementSynced();
         ee.emit('syncBookSuccess', book, highlights);
-        
-        // Add a small delay between books to prevent overwhelming Obsidian
-        // This helps with performance and prevents the vault from becoming unresponsive
+
         if (index < books.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 100));
         }

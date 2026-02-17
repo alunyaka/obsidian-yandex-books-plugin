@@ -61,13 +61,20 @@ const loadAndScrapeHighlights = async (book: Book, url: string) => {
   };
 };
 
-const scrapeBookHighlights = async (book: Book): Promise<Highlight[]> => {
+const scrapeBookHighlights = async (
+  book: Book,
+  isCancelled?: () => boolean
+): Promise<Highlight[]> => {
   let results: Highlight[] = [];
 
   let url = highlightsUrl(book);
   let hasNextPage = true;
 
   while (hasNextPage) {
+    if (isCancelled?.()) {
+      break;
+    }
+
     const data = await loadAndScrapeHighlights(book, url);
 
     results = [...results, ...data.highlights];

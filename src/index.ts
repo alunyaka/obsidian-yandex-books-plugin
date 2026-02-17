@@ -4,19 +4,30 @@ import { get } from 'svelte/store';
 import kindleIcon from '~/assets/kindleIcon.svg';
 import { ConfirmDeleteModal } from '~/components/confirmDeleteModal';
 import SyncModal from '~/components/syncModal';
+import { store as syncModalStore } from '~/components/syncModal/store';
 import { ee } from '~/eventEmitter';
 import FileManager from '~/fileManager';
 import { registerNotifications } from '~/notifications';
 import { SettingsTab } from '~/settings';
 import { initializeStores, settingsStore } from '~/store';
-import { SyncAmazon, SyncClippings, SyncManager } from '~/sync';
+import { SyncAmazon, syncCancellation,SyncClippings, SyncManager } from '~/sync';
 
 addIcon('kindle', kindleIcon);
+
+const SYNC_STATUS_MESSAGES: Record<string, string> = {
+  'sync:login': 'Kindle: Logging in…',
+  'sync:fetching-books': 'Kindle: Fetching books…',
+  'sync:syncing': 'Kindle: Syncing…',
+  'sync:cancelling': 'Kindle: Cancelling…',
+};
 
 export default class KindlePlugin extends Plugin {
   private fileManager!: FileManager;
   private syncAmazon!: SyncAmazon;
   private syncClippings!: SyncClippings;
+  private ribbonIconEl!: HTMLElement;
+  private statusBarEl!: HTMLElement;
+  private storeUnsubscribe: (() => void) | undefined;
 
   public async onload(): Promise<void> {
     console.log('Kindle Highlights plugin: loading plugin', new Date().toLocaleString());
@@ -29,8 +40,34 @@ export default class KindlePlugin extends Plugin {
     this.syncAmazon = new SyncAmazon(syncManager);
     this.syncClippings = new SyncClippings(syncManager);
 
-    this.addRibbonIcon('kindle', 'Sync your Kindle highlights', async () => {
+    this.ribbonIconEl = this.addRibbonIcon(
+      'kindle',
+      'Sync your Kindle highlights',
+      async () => {
+        await this.showSyncModal();
+      }
+    );
+
+    this.statusBarEl = this.addStatusBarItem();
+    this.statusBarEl.addClass('mod-clickable');
+    this.statusBarEl.onClickEvent(async () => {
       await this.showSyncModal();
+    });
+
+    this.storeUnsubscribe = syncModalStore.subscribe((state) => {
+      const isSyncing = state.status.startsWith('sync:');
+      const statusMessage = SYNC_STATUS_MESSAGES[state.status];
+
+      if (isSyncing && state.status === 'sync:syncing' && state.currentJob) {
+        const progress = `${state.currentJob.index + 1}/${state.totalBooks ?? '?'}`;
+        this.statusBarEl.setText(`Kindle: Syncing ${progress}`);
+      } else if (statusMessage) {
+        this.statusBarEl.setText(statusMessage);
+      } else {
+        this.statusBarEl.setText('');
+      }
+
+      this.ribbonIconEl.toggleClass('kindle-ribbon-syncing', isSyncing);
     });
 
     this.addCommand({
@@ -145,21 +182,26 @@ export default class KindlePlugin extends Plugin {
 
   private async migrateProperties(): Promise<void> {
     new Notice('Starting property migration...', 2000);
-    
+
     try {
       const result = await this.fileManager.migrateToFlatProperties();
-      
+
       if (result.migrated > 0) {
         new Notice(
-          `Migration complete: ${result.migrated} file(s) migrated${result.failed > 0 ? `, ${result.failed} failed` : ''}`,
+          `Migration complete: ${result.migrated} file(s) migrated${
+            result.failed > 0 ? `, ${result.failed} failed` : ''
+          }`,
           5000
         );
-        
+
         if (result.errors.length > 0) {
           console.warn('Migration errors:', result.errors);
         }
       } else if (result.failed > 0) {
-        new Notice(`Migration failed for ${result.failed} file(s). Check console for details.`, 5000);
+        new Notice(
+          `Migration failed for ${result.failed} file(s). Check console for details.`,
+          5000
+        );
         console.error('Migration errors:', result.errors);
       } else {
         new Notice('No files need migration. All files are already in the new format.', 3000);
@@ -171,6 +213,10 @@ export default class KindlePlugin extends Plugin {
   }
 
   public onunload(): void {
+    this.storeUnsubscribe?.();
+    syncCancellation.reset();
+    this.ribbonIconEl.removeClass('kindle-ribbon-syncing');
+    this.statusBarEl.setText('');
     ee.removeAllListeners();
     console.log('Kindle Highlights plugin: unloading plugin', new Date().toLocaleString());
   }

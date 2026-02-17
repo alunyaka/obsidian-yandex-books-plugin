@@ -1,6 +1,7 @@
 import { BrowserWindow, remote } from 'electron';
 
 import { currentAmazonRegion } from '~/amazonRegion';
+import { ee } from '~/eventEmitter';
 import type { AmazonAccount } from '~/models';
 import { settingsStore } from '~/store';
 
@@ -47,9 +48,18 @@ export default class AmazonLoginModal {
     });
 
     this.modal.on('closed', () => {
+      ee.off('syncCancelRequested', this.handleCancelDuringLogin);
       this.resolvePromise(false);
     });
+
+    ee.on('syncCancelRequested', this.handleCancelDuringLogin);
   }
+
+  private handleCancelDuringLogin = (): void => {
+    if (!this.modal.isDestroyed()) {
+      this.modal.close();
+    }
+  };
 
   async doLogin(): Promise<boolean> {
     try {

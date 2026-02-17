@@ -1,0 +1,13 @@
+.kindle-ribbon-syncing {
+  animation: kindle-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes kindle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

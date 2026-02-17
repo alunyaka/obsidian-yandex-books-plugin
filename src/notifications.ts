@@ -25,6 +25,20 @@ export const registerNotifications = (): void => {
     new Notice(message);
   });
 
+  ee.on('syncCancelled', (summary) => {
+    const { syncedCount, totalCount } = summary;
+
+    if (syncedCount === 0) {
+      new Notice('Sync cancelled — no books were synced');
+    } else {
+      new Notice(
+        `Sync cancelled — ${syncedCount} of ${totalCount} book${
+          totalCount !== 1 ? 's' : ''
+        } synced`
+      );
+    }
+  });
+
   ee.on('resyncFailure', (_file: KindleFile, message: string) => {
     new Notice(message);
   });

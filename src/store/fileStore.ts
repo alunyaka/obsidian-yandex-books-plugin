@@ -4,14 +4,22 @@ import { readable } from 'svelte/store';
 import { ee } from '~/eventEmitter';
 import type FileManager from '~/fileManager';
 
+type BookCoverInfo = {
+  title: string;
+  author: string;
+  imageUrl: string;
+};
+
 type FileStoreState = {
   fileCount: number;
   highlightCount: number;
+  books: BookCoverInfo[];
 };
 
 const INITIAL_STATE: FileStoreState = {
   fileCount: 0,
   highlightCount: 0,
+  books: [],
 };
 
 const createFileStore = () => {
@@ -28,11 +36,19 @@ const createFileStore = () => {
         if (!_fileManager) {
           return;
         }
-        
+
         const files = _fileManager.getKindleFiles();
+        const books: BookCoverInfo[] = files
+          .filter((f) => f.frontmatter?.bookImageUrl)
+          .map((f) => ({
+            title: f.frontmatter.title,
+            author: f.frontmatter.author,
+            imageUrl: f.frontmatter.bookImageUrl,
+          }));
         set({
           fileCount: files.length,
           highlightCount: _.sumBy(files, (file) => file.frontmatter?.highlightsCount || 0),
+          books,
         });
       } catch (error) {
         console.error('Error updating file count:', error);
