@@ -179,8 +179,8 @@ export class SettingsTab extends PluginSettingTab {
               .filter((line) => line !== '');
             settingsStore.actions.setIgnoredBooks(books);
           });
-        textArea.inputEl.rows = 4;
-        textArea.inputEl.style.width = '100%';
+        textArea.inputEl.rows = 6;
+        textArea.inputEl.cols = 50;
       });
   }
 
