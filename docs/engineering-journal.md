@@ -114,8 +114,104 @@ When resolving merge conflicts between PRs, the approach was always:
 
 ### What's Next
 
-- Issue triage (75 open issues)
 - PR #274 migration strategy
 - Migration UX (startup notice for old-format files?)
 - Update `minAppVersion` from 0.10.2 to something modern
 - Backfill `versions.json` with historical entries
+- Remaining bugs: #133, #312, #264, #284, #291, #300, #272, #315, #311, #263, #268, #286
+- Enhancements: #150 (save My Clippings path), #201 (sort by location), #258 (more template vars)
+- Dead code cleanup (`scrapeLogoutUrl.ts`)
+
+---
+
+## 2026-02-17 — Session 2: Issue Triage + Bug Fixes + Feature (v2.0.1, v2.1.0)
+
+### What We Did
+
+Triaged all open issues (75 → 39), fixed filename sanitization (v2.0.1), fixed author parsing bug (#306), and added book ignore list feature (#309) — released as v2.1.0.
+
+### Issue Triage
+
+Closed 36 issues total across the session:
+
+- **11** already fixed by v2.0.0 merged PRs
+- **8** stale/no-info (no response from reporters)
+- **5** duplicates (mapped to canonical issues)
+- **4** already-fixed or external problems
+- **3** fixed by filename sanitization (v2.0.1)
+- **2** fixed by author parsing + ignore list (v2.1.0)
+- **3** closable during second triage pass
+
+Open issues reduced from 75 to ~36.
+
+### v2.0.1: Filename Sanitization
+
+**Problem**: Obsidian forbids certain characters in filenames (`#`, `^`, `[`, `]`, `/`, `\`, `:`), and books with these characters in titles caused sync failures.
+
+**Approach**: TDD — wrote 10 failing tests first, then implemented `sanitizeForObsidian()` in `fileNameRenderer.ts`. Replaces `:`, `/`, `\` with `-`; strips `#`, `^`, `[`, `]`; collapses double spaces.
+
+**Closed**: #220, #266, #287
+
+### v2.1.0: Author Parsing Fix (#306) + Book Ignore List (#309)
+
+#### Author Parsing
+
+**Problem**: `parseAuthors("Kegan, Robert and Lahey, Lisa Laskow")` incorrectly split on both `,` and `and` simultaneously via regex, producing wrong `authorsLastNames`, `firstAuthorFirstName`, etc.
+
+**Root cause**: The old regex `\b(and|,)+` treated commas and "and" as equivalent delimiters. In `LastName, FirstName` format, the comma separates last/first within ONE author, not between authors.
+
+**Solution**: Added `isLastNameFirstNameFormat()` heuristic — checks whether the chunk after "and" contains a comma. If yes → `LastName, FirstName` format (split on "and", then pair comma-separated segments). If no → `FirstName LastName` format (split on both comma and "and").
+
+**Key insight**: The chunk after "and" is the cleanest signal. In `"Kegan, Robert and Lahey, Lisa Laskow"`, the last chunk `"Lahey, Lisa Laskow"` has a comma → LastName,FirstName format. In `"Vicki Robin, Joe Dominguez, And Mr. Money Mustache"`, the last chunk `"Mr. Money Mustache"` has no comma → FirstName LastName format.
+
+**Tests added**: 5 new tests covering both formats, Oxford comma, 3-author LastName format, and "and" within author names.
+
+#### Book Ignore List
+
+**Problem**: Users wanted to exclude certain books from syncing (#309).
+
+**Solution**: Added `ignoredBooks: string[]` to settings store. Users enter book titles (one per line) in a textarea in Settings. Matching is case-insensitive. Filtering applies in both sync paths:
+
+- `SyncManager.filterBooksToSync()` (Amazon sync)
+- `SyncKindleClippings.startSync()` (My Clippings sync)
+
+### Key Learnings
+
+#### 1. Heuristics Need Clean Signals
+
+The initial `commaCount === 1` heuristic for detecting `LastName, FirstName` format failed on `"Vicki Robin, Joe Dominguez, And Mr. Money Mustache"` because the first chunk also had exactly 1 comma after stripping the trailing comma. The fix: use the **last chunk after "and"** instead of the first — it's unambiguous because it has no extra authors or trailing commas.
+
+**Lesson**: When building format-detection heuristics, find the part of the input with the least noise. For comma/and author strings, that's the chunk after the last "and".
+
+#### 2. Two Sync Paths Need Consistent Filtering
+
+The Amazon sync path uses `filterBooksToSync()` which queries the settings store, but the My Clippings path bypasses this entirely and calls `syncBook()` directly. Any filtering feature must be applied in both paths.
+
+**Lesson**: Map all code paths before implementing a cross-cutting feature. The project has two sync entry points — easy to miss one.
+
+#### 3. Import Sort Linting Catches Integration Issues
+
+After adding `import { get } from 'svelte/store'` and `import { settingsStore } from '~/store'` to the clippings sync file, the import sort lint rule caught incorrect ordering. The `simple-import-sort` plugin expects type imports and value imports in a specific order.
+
+**Lesson**: Trust the linter. Always run lint after cross-file edits.
+
+#### 4. TDD Accelerates Ambiguous Parsing Logic
+
+For both filename sanitization and author parsing, writing tests first clarified edge cases before implementation. The author parsing had 3 distinct formats to handle — without tests, it would have been easy to fix one format while breaking another.
+
+### Metrics
+
+- **Issues closed**: 36 (across sessions 1-2)
+- **Open issues**: ~36 (down from 75)
+- **Tests**: 127 passing (was 112 after v2.0.0)
+- **Lint errors**: 0 (32 warnings, all pre-existing)
+- **Releases shipped**: v2.0.1 (patch), v2.1.0 (minor)
+- **Files changed in v2.1.0**: 9 files, +145 lines
+
+### What's Next
+
+- Remaining bugs: #133, #312, #264, #284, #291, #300, #272, #315, #311, #263, #268, #286
+- Enhancements: #150 (save My Clippings path), #201 (sort by location), #258 (more template vars)
+- PR #274 migration strategy (MD5 book IDs, breaking change)
+- Update `minAppVersion` from 0.10.2
+- Dead code cleanup (`scrapeLogoutUrl.ts`)
