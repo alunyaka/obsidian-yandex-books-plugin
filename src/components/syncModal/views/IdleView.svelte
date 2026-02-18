@@ -9,19 +9,36 @@
 
   $: books = $fileStore.books;
   $: visibleCovers = books.slice(0, 36);
-  $: shouldAnimate = visibleCovers.length >= 12;
-  $: rows = [[], [], []] as (typeof visibleCovers)[];
+
+  type CoverItem =
+    | { kind: 'real'; imageUrl: string; title: string }
+    | { kind: 'placeholder'; seed: number };
+
+  const TARGET_PER_ROW = 18;
+
+  $: rows = [[], [], []] as Array<CoverItem[]>;
   $: {
     rows = [[], [], []];
     visibleCovers.forEach((book, index) => {
-      rows[index % 3].push(book);
+      rows[index % 3].push({ kind: 'real', imageUrl: book.imageUrl, title: book.title });
     });
+
+    let seed = 0;
+    for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
+      const missing = Math.max(0, TARGET_PER_ROW - rows[rowIndex].length);
+      for (let i = 0; i < missing; i++) {
+        rows[rowIndex].push({ kind: 'placeholder', seed: seed++ + rowIndex * 1000 });
+      }
+    }
   }
+
+  $: shouldAnimate = rows.some((r) => r.length >= 12);
   $: animatedRows = shouldAnimate ? rows.map((r) => [...r, ...r]) : rows;
   $: isSyncing = $store.status.startsWith('sync:');
-  $: hasSyncedBefore = $settingsStore.lastSyncDate != null;
+  $: hasChosenSyncMethodBefore =
+    $settingsStore.hasStartedSync === true || $settingsStore.lastSyncDate != null;
   $: lastSyncMode = $settingsStore.lastSyncMode;
-  $: if (selectedMode === '' && hasSyncedBefore) {
+  $: if (selectedMode === '' && hasChosenSyncMethodBefore) {
     selectedMode = lastSyncMode;
   }
 
@@ -33,35 +50,41 @@
 </script>
 
 <div class="kp-idle--library">
-  {#if visibleCovers.length > 0}
-    <div class="kp-idle--cover-rows" class:kp-idle--cover-rows-animate={shouldAnimate}>
-      {#each animatedRows as row, rowIndex (rowIndex)}
-        {#if row.length > 0}
-          <div
-            class="kp-idle--cover-row"
-            style="--scroll-duration: {rowIndex === 1
-              ? '115s'
-              : rowIndex === 2
-              ? '105s'
-              : '95s'}; --scroll-direction: normal"
-          >
-            <div class="kp-idle--cover-track">
-              {#each row as book, i (book.imageUrl + i)}
-                <div class="kp-idle--cover-item">
+  <div
+    class="kp-idle--cover-rows"
+    class:kp-idle--cover-rows-animate={shouldAnimate}
+    aria-hidden="true"
+  >
+    {#each animatedRows as row, rowIndex (rowIndex)}
+      {#if row.length > 0}
+        <div
+          class="kp-idle--cover-row"
+          style="--scroll-duration: {rowIndex === 1
+            ? '115s'
+            : rowIndex === 2
+            ? '105s'
+            : '95s'}; --scroll-direction: normal"
+        >
+          <div class="kp-idle--cover-track">
+            {#each row as item, i (item.kind === 'real' ? item.imageUrl + i : `ph-${item.seed}-${i}`)}
+              <div class="kp-idle--cover-item">
+                {#if item.kind === 'real'}
                   <img
-                    src={book.imageUrl}
-                    alt={book.title}
+                    src={item.imageUrl}
+                    alt={item.title}
                     class="kp-idle--cover-img"
                     loading="lazy"
                   />
-                </div>
-              {/each}
-            </div>
+                {:else}
+                  <div class="kp-idle--cover-placeholder" style="--cover-seed: {item.seed}" />
+                {/if}
+              </div>
+            {/each}
           </div>
-        {/if}
-      {/each}
-    </div>
-  {/if}
+        </div>
+      {/if}
+    {/each}
+  </div>
 
   <div class="kp-idle--overlay">
     <SyncStats />
@@ -91,9 +114,10 @@
           <span>Ignored: {ignoredCount} book pattern{ignoredCount === 1 ? '' : 's'}</span>
           <span class="kp-idle--dot">·</span>
         {/if}
-        <span class="kp-idle--folder" title={highlightsFolder}
-          >Library folder: {highlightsFolder}</span
-        >
+        <span class="kp-idle--folder" title={highlightsFolder}>
+          Library folder:
+          <code class="kp-idle--folder-path">{highlightsFolder}</code>
+        </span>
       </div>
     </div>
   </div>
@@ -114,7 +138,7 @@
     margin-left: calc(0px - var(--size-4-5, 20px));
     margin-right: calc(0px - var(--size-4-5, 20px));
     padding: 0;
-    opacity: 0.2;
+    opacity: 1;
   }
 
   .kp-idle--cover-row {
@@ -150,6 +174,16 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 0.2;
+  }
+
+  .kp-idle--cover-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: #ffffff;
+    opacity: 0.05;
   }
 
   .kp-idle--overlay {
@@ -186,6 +220,24 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .kp-idle--folder-path {
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-monospace);
+    font-size: 0.95em;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
   }
 
   .kp-idle--overlay :global(.kp-stats--wrapper) {

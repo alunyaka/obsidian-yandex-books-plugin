@@ -9,6 +9,7 @@ type Settings = {
   highlightsFolder: string;
   lastSyncDate?: Date;
   lastSyncMode: SyncMode;
+  hasStartedSync?: boolean;
   isLoggedIn: boolean;
   fileTemplate?: string;
   highlightTemplate?: string;
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: Settings = {
   amazonRegion: 'global',
   highlightsFolder: '/',
   lastSyncMode: 'amazon',
+  hasStartedSync: false,
   isLoggedIn: false,
   syncOnBoot: false,
   downloadBookMetadata: true,
@@ -61,6 +63,7 @@ const createSettingsStore = () => {
   ee.on('syncSessionStart', (mode) => {
     store.update((state) => {
       state.lastSyncMode = mode;
+      state.hasStartedSync = true;
       return state;
     });
   });
