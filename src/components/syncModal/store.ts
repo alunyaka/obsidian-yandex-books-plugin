@@ -148,7 +148,6 @@ const createSyncModalStore = () => {
       syncMode: mode,
       syncStartedAt: Date.now(),
     });
-    addRootLog(mode === 'amazon' ? 'Starting Amazon sync' : 'Starting My Clippings sync');
   });
 
   ee.on('syncBook', (book: Book, index: number) => {

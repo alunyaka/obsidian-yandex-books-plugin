@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { Jumper } from 'svelte-loading-spinners';
 
   import { shortenTitle } from '~/utils';
@@ -9,6 +10,8 @@
   let progressMessage: string;
   let isCopying = false;
   let copied = false;
+  let detailsBodyEl: HTMLDivElement;
+  let previousLogCount = 0;
 
   const formatDelta = (ms: number | undefined): string => {
     if (ms == null) {
@@ -104,9 +107,9 @@
       progressMessage = 'Library loaded — all up to date';
     }
   } else if ($store?.syncMode === 'amazon') {
-    progressMessage = 'Syncing highlights…';
+    progressMessage = 'Syncing highlights from Amazon Cloud…';
   } else {
-    progressMessage = 'Syncing from My Clippings…';
+    progressMessage = 'Syncing highlights from My Clippings…';
   }
 
   $: total = $store.jobs?.length ?? $store.totalBooks;
@@ -118,6 +121,21 @@
   $: duration = $store.syncDurationMs;
 
   $: details = $store.activityLog;
+
+  const scrollLogToBottom = async (): Promise<void> => {
+    await tick();
+
+    if (!detailsBodyEl) {
+      return;
+    }
+
+    detailsBodyEl.scrollTop = detailsBodyEl.scrollHeight;
+  };
+
+  $: if (details.length !== previousLogCount) {
+    previousLogCount = details.length;
+    void scrollLogToBottom();
+  }
 
   const formatLogText = (): string => {
     return details
@@ -191,7 +209,7 @@
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <div class="kp-syncmodal--details-body">
+      <div class="kp-syncmodal--details-body" bind:this={detailsBodyEl}>
         {#each details as entry, i (entry.timestamp + i)}
           <div class="kp-syncmodal--details-line">
             <span
@@ -231,7 +249,7 @@
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <div class="kp-syncmodal--details-body">
+      <div class="kp-syncmodal--details-body" bind:this={detailsBodyEl}>
         {#each details as entry, i (entry.timestamp + i)}
           <div class="kp-syncmodal--details-line">
             <span
@@ -265,7 +283,7 @@
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <div class="kp-syncmodal--details-body">
+      <div class="kp-syncmodal--details-body" bind:this={detailsBodyEl}>
         {#each details as entry, i (entry.timestamp + i)}
           <div class="kp-syncmodal--details-line">
             <span
@@ -321,7 +339,7 @@
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <div class="kp-syncmodal--details-body">
+      <div class="kp-syncmodal--details-body" bind:this={detailsBodyEl}>
         {#each details as entry, i (entry.timestamp + i)}
           <div class="kp-syncmodal--details-line">
             <span
