@@ -57,6 +57,22 @@ const createFileStore = () => {
       }
     };
 
+    window.setTimeout(() => {
+      try {
+        updateFileCount();
+      } catch (error) {
+        console.warn('Error updating file count on initial subscribe:', error);
+      }
+    }, 0);
+
+    window.setTimeout(() => {
+      try {
+        updateFileCount();
+      } catch (error) {
+        console.warn('Error updating file count on delayed initial subscribe:', error);
+      }
+    }, 2000);
+
     // Don't update immediately - wait for Obsidian to be ready
     // This prevents blocking during plugin initialization
     ee.on('obsidianReady', () => {

@@ -20,7 +20,11 @@
     </div>
   </div>
   <div class="kp-stats--sync-date">
-    Last sync {moment($settingsStore.lastSyncDate).fromNow()}
+    {#if $settingsStore.lastSyncDate}
+      Last sync {moment($settingsStore.lastSyncDate).fromNow()}
+    {:else}
+      Not synced yet
+    {/if}
   </div>
 </div>
 

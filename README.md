@@ -30,6 +30,8 @@ You can extract your `My Clippings.txt` file by plugging it into your computer u
 
 - **Continuous, automatic syncing** — One button press to sync your highlights using your Amazon account via [Amazon's Kindle Reader][4]. Subsequent syncing will do an intelligent diff and bring in any new highlights without impacting any edits that you've done to your highlights file.
 
+- **Clear sync progress + cancellation** — During sync, the plugin shows a ribbon + status bar indicator, rich step-by-step progress messages, and a detailed activity log you can copy for debugging. You can also cancel an in-progress sync (it will stop after the current step/book completes).
+
 - **Sync non-Amazon books** — Sync your highlights by uploading your `My Clippings.txt` file from your Kindle device
 
 - **Enriched metadata** — Enrich your notes by downloading extra metadata information about your book from Amazon.com. Can be toggled off in settings to speed up sync.

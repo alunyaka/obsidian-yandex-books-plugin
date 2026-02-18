@@ -78,7 +78,7 @@ export const parseBookMetadata = ($: Root): BookMetadata => {
 const scrapeBookMetadata = async (book: Book): Promise<BookMetadata> => {
   const region = currentAmazonRegion();
   const domainURL = `https://${region.hostname}`;
-  const { dom } = await loadRemoteDom(`${domainURL}/dp/${book.asin}`, 1000);
+  const { dom } = await loadRemoteDom(`${domainURL}/dp/${book.asin}`, 1000, { log: false });
 
   return parseBookMetadata(dom);
 };

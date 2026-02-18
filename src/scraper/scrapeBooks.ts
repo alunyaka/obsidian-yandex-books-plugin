@@ -3,6 +3,7 @@ import moment from 'moment';
 import { get } from 'svelte/store';
 
 import { currentAmazonRegion } from '~/amazonRegion';
+import { ee } from '~/eventEmitter';
 import type { AmazonAccountRegion, Book } from '~/models';
 import { settingsStore } from '~/store';
 import { hash } from '~/utils';
@@ -37,7 +38,6 @@ export const parseImageUrl = (scrapedImageUrl: string): string => {
   return scrapedImageUrl.replace(/\._SY\d+\./, '._SX1024.')?.trim();
 };
 
-
 export const parseBooks = ($: Root): Book[] => {
   const region = currentAmazonRegion();
   const domainURL = `https://${region.hostname}`;
@@ -67,18 +67,22 @@ export const parseBooks = ($: Root): Book[] => {
 
 const scrapeBooks = async (): Promise<Book[]> => {
   const region = currentAmazonRegion();
+  ee.emit('syncLog', `Loading Kindle notebook from ${region.hostname}…`);
   const { dom } = await loadRemoteDom(region.notebookUrl, 30000);
   const books = parseBooks(dom);
-  
+
   // Amazon's Kindle notebook page typically shows up to 54 books per page
   // If we get exactly 54, there may be more books on additional pages
   // However, pagination requires complex interaction with Amazon's interface
   // Users with more than 54 books may need to sync multiple times
   // The sync process is intelligent and will only sync new/changed books
   if (books.length === 54) {
-    console.log('Found 54 books. If you have more books, you may need to sync multiple times to get them all.');
+    console.log(
+      'Found 54 books. If you have more books, you may need to sync multiple times to get them all.'
+    );
+    ee.emit('syncLog', 'Note: Kindle notebook may show only 54 books per page');
   }
-  
+
   return books;
 };
 

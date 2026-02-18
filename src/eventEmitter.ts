@@ -23,6 +23,7 @@ interface MessageEvents {
   resyncFailure: (file: KindleFile, message: string) => void;
   syncCancelRequested: () => void;
   syncCancelled: (summary: { syncedCount: number; totalCount: number }) => void;
+  syncLog: (message: string) => void;
 }
 
 export const ee = new EventEmitter() as TypedEmitter<MessageEvents>;

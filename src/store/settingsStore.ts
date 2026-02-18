@@ -87,21 +87,6 @@ const createSettingsStore = () => {
     }
   });
 
-  const isLegacy = async () => {
-    const data = Object.assign({}, DEFAULT_SETTINGS, await _plugin.loadData()) as Settings;
-    return data.history != null;
-  };
-
-  const upgradeStoreState = async () => {
-    const data = Object.assign({}, DEFAULT_SETTINGS, await _plugin.loadData()) as Settings;
-
-    // Remove deprecated settings field
-    delete data.noteTemplate;
-    delete data.history;
-
-    await _plugin.saveData(data);
-  };
-
   const setHighlightsFolder = (value: string) => {
     store.update((state) => {
       state.highlightsFolder = value;
@@ -170,7 +155,6 @@ const createSettingsStore = () => {
     store,
     subscribe: store.subscribe,
     initialize,
-    isLegacy,
     actions: {
       setHighlightsFolder,
       login,
@@ -182,7 +166,6 @@ const createSettingsStore = () => {
       setDownloadBookMetadata,
       setAmazonRegion,
       setIgnoredBooks,
-      upgradeStoreState,
     },
   };
 };

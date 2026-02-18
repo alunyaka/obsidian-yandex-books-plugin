@@ -1,6 +1,7 @@
 import type { Root } from 'cheerio';
 
 import { currentAmazonRegion } from '~/amazonRegion';
+import { ee } from '~/eventEmitter';
 import type { Book, Highlight } from '~/models';
 import { br2ln, hash } from '~/utils';
 
@@ -51,7 +52,7 @@ const parseHighlights = ($: Root): Highlight[] => {
 };
 
 const loadAndScrapeHighlights = async (book: Book, url: string) => {
-  const { dom } = await loadRemoteDom(url);
+  const { dom } = await loadRemoteDom(url, 0, { log: false });
   const nextPageState = parseNextPageState(dom);
 
   return {
@@ -69,13 +70,24 @@ const scrapeBookHighlights = async (
 
   let url = highlightsUrl(book);
   let hasNextPage = true;
+  let pageIndex = 0;
 
   while (hasNextPage) {
     if (isCancelled?.()) {
       break;
     }
 
+    pageIndex++;
+    ee.emit('syncLog', `Reading highlights from page ${pageIndex}…`);
+
     const data = await loadAndScrapeHighlights(book, url);
+
+    ee.emit(
+      'syncLog',
+      `Found ${data.highlights.length} highlight${
+        data.highlights.length === 1 ? '' : 's'
+      } on page ${pageIndex}`
+    );
 
     results = [...results, ...data.highlights];
 

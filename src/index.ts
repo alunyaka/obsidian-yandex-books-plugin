@@ -10,13 +10,13 @@ import FileManager from '~/fileManager';
 import { registerNotifications } from '~/notifications';
 import { SettingsTab } from '~/settings';
 import { initializeStores, settingsStore } from '~/store';
-import { SyncAmazon, syncCancellation,SyncClippings, SyncManager } from '~/sync';
+import { SyncAmazon, syncCancellation, SyncClippings, SyncManager } from '~/sync';
 
 addIcon('kindle', kindleIcon);
 
 const SYNC_STATUS_MESSAGES: Record<string, string> = {
-  'sync:login': 'Kindle: Logging in…',
-  'sync:fetching-books': 'Kindle: Fetching books…',
+  'sync:login': 'Kindle: Connecting…',
+  'sync:fetching-books': 'Kindle: Loading library…',
   'sync:syncing': 'Kindle: Syncing…',
   'sync:cancelling': 'Kindle: Cancelling…',
 };
@@ -40,18 +40,14 @@ export default class KindlePlugin extends Plugin {
     this.syncAmazon = new SyncAmazon(syncManager);
     this.syncClippings = new SyncClippings(syncManager);
 
-    this.ribbonIconEl = this.addRibbonIcon(
-      'kindle',
-      'Sync your Kindle highlights',
-      async () => {
-        await this.showSyncModal();
-      }
-    );
+    this.ribbonIconEl = this.addRibbonIcon('kindle', 'Sync your Kindle highlights', () => {
+      this.showSyncModal();
+    });
 
     this.statusBarEl = this.addStatusBarItem();
     this.statusBarEl.addClass('mod-clickable');
-    this.statusBarEl.onClickEvent(async () => {
-      await this.showSyncModal();
+    this.statusBarEl.onClickEvent(() => {
+      this.showSyncModal();
     });
 
     this.storeUnsubscribe = syncModalStore.subscribe((state) => {
@@ -73,8 +69,8 @@ export default class KindlePlugin extends Plugin {
     this.addCommand({
       id: 'kindle-sync',
       name: 'Sync highlights',
-      callback: async () => {
-        await this.showSyncModal();
+      callback: () => {
+        this.showSyncModal();
       },
     });
 
@@ -169,8 +165,8 @@ export default class KindlePlugin extends Plugin {
     });
   }
 
-  private async showSyncModal(): Promise<void> {
-    await new SyncModal(this.app, {
+  private showSyncModal(): void {
+    new SyncModal(this.app, {
       onOnlineSync: () => this.startAmazonSync(),
       onMyClippingsSync: () => this.syncClippings.startSync(),
     }).show();

@@ -31,7 +31,14 @@ export default class SyncKindleClippings {
     try {
       ee.emit('syncSessionStart', 'my-clippings');
 
+      ee.emit('syncLog', 'Reading My Clippings file…');
       const bookHighlights = parseBooks(clippingsFile);
+      ee.emit(
+        'syncLog',
+        `Parsed ${bookHighlights.length} book${
+          bookHighlights.length === 1 ? '' : 's'
+        } from My Clippings`
+      );
       const ignoredBooks = get(settingsStore).ignoredBooks ?? [];
       const ignoredLower = ignoredBooks
         .map((t) => t.toLowerCase().trim())

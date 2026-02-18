@@ -1,13 +1,30 @@
 .kindle-ribbon-syncing {
-  animation: kindle-pulse 1.5s ease-in-out infinite;
+  animation: kindle-pulse 1.2s ease-in-out infinite;
+  color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--interactive-accent) 35%, transparent);
+}
+
+.kindle-ribbon-syncing svg {
+  color: inherit;
+  fill: currentColor;
 }
 
 @keyframes kindle-pulse {
   0%,
   100% {
     opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--interactive-accent) 35%, transparent);
+    filter: drop-shadow(
+      0 0 8px color-mix(in srgb, var(--interactive-accent) 55%, transparent)
+    );
   }
   50% {
-    opacity: 0.4;
+    opacity: 0.65;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--interactive-accent) 0%, transparent);
+    filter: drop-shadow(
+      0 0 14px color-mix(in srgb, var(--interactive-accent) 75%, transparent)
+    );
   }
 }
