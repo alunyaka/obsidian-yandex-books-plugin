@@ -6,26 +6,37 @@
   function numberWithCommas(x: number) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
+
+  $: hasSyncedBefore = $settingsStore.lastSyncDate != null;
+  $: hasAnyData = $fileStore.fileCount > 0 || $fileStore.highlightCount > 0;
 </script>
 
 <div class="kp-stats--wrapper">
-  <div class="kp-stats--item-wrapper">
-    <div class="kp-stats--item">
-      <div>Books</div>
-      <div class="kp-stats--value">{numberWithCommas($fileStore.fileCount)}</div>
+  {#if !hasSyncedBefore && !hasAnyData}
+    <div class="kp-stats--empty">
+      <div class="kp-stats--empty-subtitle">
+        Choose a sync method below to import your Kindle highlights.
+      </div>
     </div>
-    <div class="kp-stats--item">
-      <div>Highlights</div>
-      <div class="kp-stats--value">{numberWithCommas($fileStore.highlightCount)}</div>
+  {:else}
+    <div class="kp-stats--item-wrapper">
+      <div class="kp-stats--item">
+        <div>Books</div>
+        <div class="kp-stats--value">{numberWithCommas($fileStore.fileCount)}</div>
+      </div>
+      <div class="kp-stats--item">
+        <div>Highlights</div>
+        <div class="kp-stats--value">{numberWithCommas($fileStore.highlightCount)}</div>
+      </div>
     </div>
-  </div>
-  <div class="kp-stats--sync-date">
-    {#if $settingsStore.lastSyncDate}
-      Last sync {moment($settingsStore.lastSyncDate).fromNow()}
-    {:else}
-      Not synced yet
-    {/if}
-  </div>
+    <div class="kp-stats--sync-date">
+      {#if $settingsStore.lastSyncDate}
+        Last sync {moment($settingsStore.lastSyncDate).fromNow()}
+      {:else}
+        Synced previously
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -58,5 +69,16 @@
     font-size: 0.8em;
     text-align: center;
     margin-top: 5px;
+  }
+
+  .kp-stats--empty {
+    text-align: center;
+    padding: 8px 4px;
+  }
+
+  .kp-stats--empty-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95em;
+    max-width: 360px;
   }
 </style>
