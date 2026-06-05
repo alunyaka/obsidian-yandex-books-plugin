@@ -14,7 +14,9 @@ import type {
 
 const API_ORIGIN = 'https://api.bookmate.yandex.net';
 const REST_BASE_URL = `${API_ORIGIN}/api/v5`;
-const PAGE_LIMIT = 100;
+const LIBRARY_PAGE_LIMIT = 100;
+const QUOTES_PAGE_LIMIT = 20;
+const MAX_QUOTES_PAGES = 500;
 
 export type YandexBooksDebugEvent = {
   message: string;
@@ -68,9 +70,20 @@ export default class YandexBooksClient {
     });
 
     const quotes = await this.getAllQuotesWithFallback(userIds);
+    const quoteBookIds = this.getUniqueQuoteBookIds(quotes);
+    const libraryBookIds = this.getUniqueLibraryBookIds(libraryCards);
+    const libraryBooksWithoutQuotes = libraryBookIds.filter((bookId) => !quoteBookIds.includes(bookId));
+
+    this.log('Quote books', {
+      count: quoteBookIds.length,
+      titles: this.getQuoteBookTitles(quotes).join(' | '),
+    });
+    this.log('Library books without quotes', {
+      count: libraryBooksWithoutQuotes.length,
+    });
     this.log('Mapping quotes to books', {
       quotes: quotes.length,
-      uniqueBooks: this.getUniqueQuoteBookIds(quotes).length,
+      uniqueBooks: quoteBookIds.length,
     });
     return mapQuotesToBookHighlights(quotes);
   }
@@ -83,23 +96,43 @@ export default class YandexBooksClient {
 
   private async getAllQuotes(userId: string): Promise<YandexQuote[]> {
     const quotes: YandexQuote[] = [];
-    let offset = 0;
+    const seen = new Set<string>();
 
-    while (true) {
-      this.log('Loading quotes page', { limit: PAGE_LIMIT, offset });
+    for (let pageNumber = 1; pageNumber <= MAX_QUOTES_PAGES; pageNumber++) {
+      this.log('Loading quotes page', { page: pageNumber, perPage: QUOTES_PAGE_LIMIT });
       const response = await this.getJson<YandexQuotesResponse>(
-        `/users/${encodeURIComponent(userId)}/quotes?limit=${PAGE_LIMIT}&offset=${offset}`
+        `/users/${encodeURIComponent(userId)}/quotes?page=${pageNumber}&per_page=${QUOTES_PAGE_LIMIT}`
       );
-      const page = response.quotes ?? [];
-      quotes.push(...page);
-      this.log('Loaded quotes page', { count: page.length, total: quotes.length });
-
-      if (page.length < PAGE_LIMIT) {
-        return quotes;
+      if (pageNumber === 1) {
+        this.log('Quotes response metadata', this.getResponseMetadata(response));
       }
 
-      offset += PAGE_LIMIT;
+      const page = response.quotes ?? [];
+      const newQuotes = page.filter((quote) => {
+        const id = this.getQuoteId(quote);
+
+        if (seen.has(id)) {
+          return false;
+        }
+
+        seen.add(id);
+        return true;
+      });
+
+      quotes.push(...newQuotes);
+      this.log('Loaded quotes page', {
+        count: page.length,
+        newCount: newQuotes.length,
+        total: quotes.length,
+      });
+
+      if (page.length === 0 || newQuotes.length === 0) {
+        return quotes;
+      }
     }
+
+    this.log('Stopped quotes pagination at safety limit', { pages: MAX_QUOTES_PAGES });
+    return quotes;
   }
 
   private async getAllLibraryCards(): Promise<YandexLibraryCard[]> {
@@ -107,19 +140,19 @@ export default class YandexBooksClient {
     let offset = 0;
 
     while (true) {
-      this.log('Loading library page', { limit: PAGE_LIMIT, offset });
+      this.log('Loading library page', { limit: LIBRARY_PAGE_LIMIT, offset });
       const response = await this.getJson<YandexLibraryCardsResponse>(
-        `/profile/library_cards?limit=${PAGE_LIMIT}&offset=${offset}`
+        `/profile/library_cards?limit=${LIBRARY_PAGE_LIMIT}&offset=${offset}`
       );
       const page = response.library_cards ?? [];
       libraryCards.push(...page);
       this.log('Loaded library page', { count: page.length, total: libraryCards.length });
 
-      if (page.length < PAGE_LIMIT) {
+      if (page.length < LIBRARY_PAGE_LIMIT) {
         return libraryCards;
       }
 
-      offset += PAGE_LIMIT;
+      offset += LIBRARY_PAGE_LIMIT;
     }
   }
 
@@ -284,6 +317,65 @@ export default class YandexBooksClient {
           .filter((value): value is string => value != null && value !== '')
       ),
     ];
+  }
+
+  private getQuoteId(quote: YandexQuote): string {
+    return quote.uuid ?? quote.cfi ?? `${quote.item_uuid ?? 'quote'}-${quote.created_at ?? ''}`;
+  }
+
+  private getUniqueLibraryBookIds(libraryCards: YandexLibraryCard[]): string[] {
+    return [
+      ...new Set(
+        libraryCards
+          .map((card) => card.book?.uuid ?? card.audiobook?.uuid ?? card.comicbook?.uuid)
+          .filter((value): value is string => value != null && value !== '')
+      ),
+    ];
+  }
+
+  private getQuoteBookTitles(quotes: YandexQuote[]): string[] {
+    const titlesById = new Map<string, string>();
+
+    quotes.forEach((quote) => {
+      const bookId = quote.book?.uuid ?? quote.item_uuid;
+      const title = quote.book?.title ?? quote.book?.name;
+
+      if (bookId != null && title != null && !titlesById.has(bookId)) {
+        titlesById.set(bookId, title);
+      }
+    });
+
+    return [...titlesById.values()];
+  }
+
+  private getResponseMetadata(
+    response: Record<string, unknown>
+  ): YandexBooksDebugEvent['details'] {
+    const meta = response.meta as Record<string, unknown> | undefined;
+    const pagination = response.pagination as Record<string, unknown> | undefined;
+
+    return {
+      keys: Object.keys(response).join(','),
+      total: this.numberish(response.total),
+      totalCount: this.numberish(response.total_count),
+      count: this.numberish(response.count),
+      metaTotal: this.numberish(meta?.total),
+      metaTotalCount: this.numberish(meta?.total_count),
+      paginationTotal: this.numberish(pagination?.total),
+    };
+  }
+
+  private numberish(value: unknown): number | undefined {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (typeof value === 'string' && value.trim() !== '') {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : undefined;
+    }
+
+    return undefined;
   }
 
   private requestLabel(url: string): string {
