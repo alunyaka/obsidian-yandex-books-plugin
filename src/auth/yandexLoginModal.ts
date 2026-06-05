@@ -3,13 +3,10 @@ import { Notice } from 'obsidian';
 
 import {
   readYandexAuthInfo,
-  YANDEX_BOOKS_HOME_URL,
+  YANDEX_BOOKS_OAUTH_URL,
   YANDEX_BOOKS_SESSION_PARTITION,
-  YANDEX_PASSPORT_LOGIN_URL,
   type YandexAuthInfo,
 } from './yandexSession';
-
-const CHECK_DELAY_MS = 500;
 
 type BrowserWindow = {
   close(): void;
@@ -55,22 +52,30 @@ export default class YandexLoginModal {
       };
 
       const maybeCompleteLogin = (url: string) => {
-        if (!url.startsWith(YANDEX_BOOKS_HOME_URL)) {
+        const token = this.getAccessToken(url);
+        if (token == null) {
           return;
         }
 
-        window.setTimeout(() => {
-          readYandexAuthInfo()
-            .then((authInfo) => {
-              if (authInfo.isLoggedIn) {
-                finish(authInfo);
-              }
-            })
-            .catch((error) => {
-              console.error('Error checking Yandex Books auth state:', error);
-              new Notice('Could not check Yandex Books login state');
+        readYandexAuthInfo()
+          .then((authInfo) => {
+            finish({
+              ...authInfo,
+              isLoggedIn: true,
+              oauthToken: token,
+              oauthTokenCapturedAt: new Date().toISOString(),
             });
-        }, CHECK_DELAY_MS);
+          })
+          .catch((error) => {
+            console.error('Error checking Yandex Books auth state:', error);
+            new Notice('Could not check Yandex Books login state');
+            finish({
+              isLoggedIn: true,
+              oauthToken: token,
+              oauthTokenCapturedAt: new Date().toISOString(),
+              lastCheckedAt: new Date().toISOString(),
+            });
+          });
       };
 
       this.window.webContents.on('did-navigate', (_event, url) => maybeCompleteLogin(url));
@@ -79,7 +84,17 @@ export default class YandexLoginModal {
       );
       this.window.on('closed', () => finish(undefined));
 
-      this.window.loadURL(YANDEX_PASSPORT_LOGIN_URL);
+      this.window.loadURL(YANDEX_BOOKS_OAUTH_URL);
     });
+  }
+
+  private getAccessToken(url: string): string | undefined {
+    try {
+      const parsed = new URL(url);
+      const params = new URLSearchParams(parsed.hash.replace(/^#/, ''));
+      return params.get('access_token') ?? undefined;
+    } catch {
+      return undefined;
+    }
   }
 }

@@ -1,16 +1,13 @@
 import { remote } from 'electron';
 
-import {
-  readYandexAuthInfo,
-  YANDEX_BOOKS_HOME_URL,
-  YANDEX_BOOKS_SESSION_PARTITION,
-} from '~/auth';
+import { readYandexAuthInfo, YANDEX_BOOKS_SESSION_PARTITION } from '~/auth';
 import type { BookHighlight } from '~/models';
 
 import { mapQuotesToBookHighlights } from './mappers';
 import type { YandexProfile, YandexQuote, YandexQuotesResponse } from './types';
 
-const REST_BASE_URL = 'https://api.bookmate.yandex.net/api/v5';
+const API_ORIGIN = 'https://api.bookmate.yandex.net';
+const REST_BASE_URL = `${API_ORIGIN}/api/v5`;
 const PAGE_LIMIT = 100;
 
 export type YandexBooksDebugEvent = {
@@ -39,7 +36,7 @@ export default class YandexBooksClient {
   private window: BrowserWindow | undefined;
   private ready: Promise<void> | undefined;
 
-  constructor(private debug?: DebugLogger) {}
+  constructor(private oauthToken: string, private debug?: DebugLogger) {}
 
   public async getProfile(): Promise<YandexProfile> {
     this.log('Loading profile');
@@ -124,6 +121,7 @@ export default class YandexBooksClient {
         credentials: 'include',
         headers: {
           Accept: 'application/json',
+          Authorization: ${JSON.stringify(`OAuth ${this.oauthToken}`)},
           'X-Requested-With': 'XMLHttpRequest'
         }
       }).then(async (response) => ({
@@ -134,7 +132,17 @@ export default class YandexBooksClient {
       }))
     `;
 
-    return this.window.webContents.executeJavaScript<FetchResult>(script);
+    try {
+      return await this.window.webContents.executeJavaScript<FetchResult>(script);
+    } catch (error) {
+      this.log('API fetch failed before HTTP response', {
+        path: this.requestLabel(url),
+        error: String(error),
+      });
+      throw new YandexBooksApiError(
+        `Yandex Books API network request failed for ${this.requestLabel(url)}: ${String(error)}`
+      );
+    }
   }
 
   private async ensureReady(): Promise<void> {
@@ -161,7 +169,7 @@ export default class YandexBooksClient {
       this.window.webContents.once('did-fail-load', () => {
         reject(new YandexBooksApiError('Could not initialize Yandex Books session window'));
       });
-      this.window.loadURL(YANDEX_BOOKS_HOME_URL);
+      this.window.loadURL(API_ORIGIN);
     });
 
     return this.ready;

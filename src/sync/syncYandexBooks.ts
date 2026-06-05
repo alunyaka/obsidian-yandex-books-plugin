@@ -12,13 +12,16 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
   const mode = 'yandex-books';
   const auth = get(settingsStore).yandexAuth;
 
-  if (!auth.isLoggedIn) {
-    ee.emit('syncSessionFailure', 'Connect your Yandex Books account in plugin settings first');
+  if (!auth.isLoggedIn || auth.oauthToken == null) {
+    ee.emit(
+      'syncSessionFailure',
+      'Connect your Yandex Books account in plugin settings first to save an OAuth token'
+    );
     return;
   }
 
   const syncManager = new SyncManager(fileManager);
-  const client = new YandexBooksClient((event) => {
+  const client = new YandexBooksClient(auth.oauthToken, (event) => {
     const details =
       event.details != null
         ? ` ${Object.entries(event.details)

@@ -6,6 +6,8 @@ export const YANDEX_BOOKS_LIBRARY_URL = `${YANDEX_BOOKS_HOME_URL}/library?force-
 export const YANDEX_PASSPORT_LOGIN_URL = `https://passport.yandex.ru/auth?origin=bookmate&retpath=${encodeURIComponent(
   YANDEX_BOOKS_LIBRARY_URL
 )}`;
+export const YANDEX_BOOKS_OAUTH_URL =
+  'https://oauth.yandex.ru/authorize?response_type=token&client_id=4483e97bab6e486a9822973109a14d05';
 
 const AUTH_COOKIE_NAMES = new Set(['Session_id', 'sessionid2', 'yandex_login', 'yandexuid']);
 
@@ -14,6 +16,8 @@ export type YandexAuthInfo = {
   login?: string;
   uid?: string;
   lastCheckedAt?: string;
+  oauthToken?: string;
+  oauthTokenCapturedAt?: string;
 };
 
 type ElectronCookie = {

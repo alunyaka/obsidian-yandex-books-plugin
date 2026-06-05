@@ -49,8 +49,8 @@ export class SettingsTab extends PluginSettingTab {
     const desc = auth.isLoggedIn
       ? `Connected${auth.login ? ` as ${auth.login}` : ''}${
           auth.lastCheckedAt ? ` - checked ${new Date(auth.lastCheckedAt).toLocaleString()}` : ''
-        }`
-      : 'Connect your Yandex account in a separate browser session. Cookies stay in Electron storage and are not saved in plugin settings.';
+        }${auth.oauthToken ? ' - OAuth token saved' : ' - OAuth token missing'}`
+      : 'Connect your Yandex account with OAuth. The OAuth token is saved in plugin settings and used for Yandex Books API requests.';
 
     new Setting(this.containerEl)
       .setName('Yandex Books account')
@@ -82,8 +82,17 @@ export class SettingsTab extends PluginSettingTab {
 
           try {
             const authInfo = await readYandexAuthInfo();
-            settingsStore.actions.setYandexAuth(authInfo);
-            new Notice(authInfo.isLoggedIn ? 'Yandex Books session is active' : 'Not logged in');
+            settingsStore.actions.setYandexAuth({
+              ...authInfo,
+              oauthToken: auth.oauthToken,
+              oauthTokenCapturedAt: auth.oauthTokenCapturedAt,
+              isLoggedIn: authInfo.isLoggedIn || auth.oauthToken != null,
+            });
+            new Notice(
+              authInfo.isLoggedIn || auth.oauthToken != null
+                ? 'Yandex Books auth state refreshed'
+                : 'Not logged in'
+            );
           } catch (error) {
             console.error('Error checking Yandex Books account:', error);
             new Notice(`Could not check Yandex Books account: ${String(error)}`);
