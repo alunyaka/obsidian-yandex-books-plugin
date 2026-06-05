@@ -5,8 +5,8 @@
 | Command                | Purpose        | Expected                                                 |
 | ---------------------- | -------------- | -------------------------------------------------------- |
 | `npm install`          | Install deps   | Clean (some deprecation warnings OK)                     |
-| `npm run lint`         | ESLint         | 0 errors required. Warnings acceptable (32 as of v2.0.0) |
-| `npm run test`         | Jest tests     | All pass (112 tests, 12 suites as of v2.0.0)             |
+| `npm run lint`         | ESLint         | 0 errors required. Warnings acceptable                   |
+| `npm run test`         | Jest tests     | All pass                                                |
 | `npm run test-verbose` | Jest verbose   | Same as above with detail                                |
 | `npm run build`        | webpack → dist/ | Produces `dist/main.js` (~1MB) and `dist/manifest.json` |
 
@@ -39,10 +39,10 @@ Three files must be updated together for any version bump:
 Copy built artifacts into a vault's plugin directory:
 
 ```bash
-VAULT="/Users/hosman/Documents/Test Vault/Test Vault"
+VAULT="<your-vault>"
 PLUGIN_DIR="$VAULT/.obsidian/plugins/obsidian-yandex-books-plugin"
 mkdir -p "$PLUGIN_DIR"
-cp dist/main.js dist/manifest.json "$PLUGIN_DIR/"
+cp dist/main.js dist/manifest.json dist/styles.css "$PLUGIN_DIR/"
 ```
 
 Then restart Obsidian (or toggle the plugin off/on in Settings → Community Plugins).

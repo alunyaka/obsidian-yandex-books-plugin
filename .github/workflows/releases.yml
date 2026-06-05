@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  PLUGIN_NAME: obsidian-kindle-plugin
+  PLUGIN_NAME: obsidian-yandex-books-plugin
 
 jobs:
   build:
