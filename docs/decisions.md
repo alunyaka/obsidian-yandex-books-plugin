@@ -1,4 +1,4 @@
-# Decisions & Deferred Work — obsidian-kindle-plugin
+# Decisions & Deferred Work — obsidian-yandex-books-plugin
 
 Tracking key decisions made and work explicitly deferred for future sessions.
 
@@ -34,10 +34,11 @@ Tracking key decisions made and work explicitly deferred for future sessions.
 
 ## Deferred Work
 
-| Item                       | Reason                           | Priority |
-| -------------------------- | -------------------------------- | -------- |
-| Issue triage (75 open)     | Dedicated session needed         | High     |
-| PR #274 (MD5 book IDs)     | Breaking change, needs migration | Medium   |
-| `minAppVersion` update     | Needs Obsidian version research  | Low      |
-| Automatic migration prompt | UX design pending                | Low      |
-| Backfill `versions.json`   | Cosmetic, not blocking           | Low      |
+| Item                               | Reason                                      | Priority |
+| ---------------------------------- | ------------------------------------------- | -------- |
+| Private Yandex Books quotes        | REST `/quotes` returns public quotes only; GraphQL gateway requires whitelisted operations captured from the real frontend Network flow | High     |
+| Issue triage (75 open)             | Dedicated session needed                    | High     |
+| PR #274 (MD5 book IDs)             | Breaking change, needs migration            | Medium   |
+| `minAppVersion` update             | Needs Obsidian version research             | Low      |
+| Automatic migration prompt         | UX design pending                           | Low      |
+| Backfill `versions.json`           | Cosmetic, not blocking                      | Low      |

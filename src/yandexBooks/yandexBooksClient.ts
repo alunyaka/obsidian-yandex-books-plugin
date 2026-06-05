@@ -15,7 +15,7 @@ import type {
 const API_ORIGIN = 'https://api.bookmate.yandex.net';
 const REST_BASE_URL = `${API_ORIGIN}/api/v5`;
 const LIBRARY_PAGE_LIMIT = 100;
-const QUOTES_PAGE_LIMIT = 20;
+const QUOTES_PAGE_LIMIT = 200;
 const MAX_QUOTES_PAGES = 500;
 
 export type YandexBooksDebugEvent = {
@@ -103,9 +103,6 @@ export default class YandexBooksClient {
       const response = await this.getJson<YandexQuotesResponse>(
         `/users/${encodeURIComponent(userId)}/quotes?page=${pageNumber}&per_page=${QUOTES_PAGE_LIMIT}`
       );
-      if (pageNumber === 1) {
-        this.log('Quotes response metadata', this.getResponseMetadata(response));
-      }
 
       const page = response.quotes ?? [];
       const newQuotes = page.filter((quote) => {
@@ -346,36 +343,6 @@ export default class YandexBooksClient {
     });
 
     return [...titlesById.values()];
-  }
-
-  private getResponseMetadata(
-    response: Record<string, unknown>
-  ): YandexBooksDebugEvent['details'] {
-    const meta = response.meta as Record<string, unknown> | undefined;
-    const pagination = response.pagination as Record<string, unknown> | undefined;
-
-    return {
-      keys: Object.keys(response).join(','),
-      total: this.numberish(response.total),
-      totalCount: this.numberish(response.total_count),
-      count: this.numberish(response.count),
-      metaTotal: this.numberish(meta?.total),
-      metaTotalCount: this.numberish(meta?.total_count),
-      paginationTotal: this.numberish(pagination?.total),
-    };
-  }
-
-  private numberish(value: unknown): number | undefined {
-    if (typeof value === 'number') {
-      return value;
-    }
-
-    if (typeof value === 'string' && value.trim() !== '') {
-      const numeric = Number(value);
-      return Number.isFinite(numeric) ? numeric : undefined;
-    }
-
-    return undefined;
   }
 
   private requestLabel(url: string): string {
