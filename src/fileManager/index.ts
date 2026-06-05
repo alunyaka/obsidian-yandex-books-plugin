@@ -3,12 +3,56 @@ import { MetadataCache, normalizePath, TAbstractFile, TFile, TFolder, Vault } fr
 import { get } from 'svelte/store';
 
 import type { Book, BookMetadata, SyncedBookFile, YandexBooksFrontmatter } from '~/models';
+import { DefaultFileTemplate } from '~/rendering';
 import { settingsStore } from '~/store';
 
 import { bookFilePath, frontMatterToBook } from './mappers';
 
 const SyncingStateKey = 'yandex-books-sync';
 const PropertyPrefix = 'yandex-books-';
+
+const BookIdFallbackKeys = ['bookId', `${PropertyPrefix}bookId`];
+
+const extractFrontmatterTemplate = (template: string): string | undefined => {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(template);
+
+  return match?.[1];
+};
+
+const extractBookIdKeysFromTemplate = (template: string): string[] => {
+  const frontmatterTemplate = extractFrontmatterTemplate(template);
+  if (frontmatterTemplate == null) {
+    return [];
+  }
+
+  return frontmatterTemplate
+    .split(/\r?\n/)
+    .flatMap((line) => {
+      if (!/{{\s*bookId\b/.test(line)) {
+        return [];
+      }
+
+      const key = /^\s*(?:{%\s*if\s+\w+\s*%}\s*)?([^:]+):/.exec(line)?.[1]?.trim();
+
+      return key == null || key === '' ? [] : [key];
+    });
+};
+
+const frontmatterValue = (
+  frontmatter: Record<string, unknown>,
+  keys: string[]
+): unknown | undefined => {
+  return keys.map((key) => frontmatter[key]).find((value) => value != null && value !== '');
+};
+
+const frontmatterString = (
+  frontmatter: Record<string, unknown>,
+  keys: string[]
+): string | undefined => {
+  const value = frontmatterValue(frontmatter, keys);
+
+  return value == null ? undefined : String(value);
+};
 
 export default class FileManager {
   constructor(private vault: Vault, private metadataCache: MetadataCache) {}
@@ -42,21 +86,47 @@ export default class FileManager {
 
       // File cache can be undefined if this file was just created and not yet cached by Obsidian
       let yandexBooksFrontmatter: YandexBooksFrontmatter | undefined;
-      
+
       if (fileCache?.frontmatter) {
         yandexBooksFrontmatter = fileCache.frontmatter[SyncingStateKey] as
           | YandexBooksFrontmatter
           | undefined;
-        
-        if (!yandexBooksFrontmatter && fileCache.frontmatter[`${PropertyPrefix}bookId`]) {
+
+        const settings = get(settingsStore);
+        const fileTemplate = settings.fileTemplate || DefaultFileTemplate;
+        const bookIdKeys = [
+          ...extractBookIdKeysFromTemplate(fileTemplate),
+          ...BookIdFallbackKeys,
+        ];
+        const bookId = frontmatterString(fileCache.frontmatter, bookIdKeys);
+
+        if (!yandexBooksFrontmatter && bookId != null) {
           yandexBooksFrontmatter = {
-            bookId: fileCache.frontmatter[`${PropertyPrefix}bookId`] as string,
-            title: fileCache.frontmatter[`${PropertyPrefix}title`] as string,
-            author: fileCache.frontmatter[`${PropertyPrefix}author`] as string,
-            bookUrl: fileCache.frontmatter[`${PropertyPrefix}bookUrl`] as string | undefined,
-            lastAnnotatedDate: fileCache.frontmatter[`${PropertyPrefix}lastAnnotatedDate`] as string | undefined,
-            bookImageUrl: fileCache.frontmatter[`${PropertyPrefix}bookImageUrl`] as string | undefined,
-            highlightsCount: fileCache.frontmatter[`${PropertyPrefix}highlightsCount`] as number | undefined,
+            bookId,
+            title:
+              frontmatterString(fileCache.frontmatter, ['title', `${PropertyPrefix}title`]) ??
+              bookId,
+            author:
+              frontmatterString(fileCache.frontmatter, ['author', `${PropertyPrefix}author`]) ??
+              '',
+            bookUrl: frontmatterString(fileCache.frontmatter, [
+              'bookUrl',
+              `${PropertyPrefix}bookUrl`,
+            ]),
+            lastAnnotatedDate: frontmatterString(fileCache.frontmatter, [
+              'lastAnnotatedDate',
+              `${PropertyPrefix}lastAnnotatedDate`,
+            ]),
+            bookImageUrl: frontmatterString(fileCache.frontmatter, [
+              'ImageUrl',
+              'imageUrl',
+              'bookImageUrl',
+              `${PropertyPrefix}bookImageUrl`,
+            ]),
+            highlightsCount: frontmatterValue(fileCache.frontmatter, [
+              'highlightsCount',
+              `${PropertyPrefix}highlightsCount`,
+            ]) as number | undefined,
           };
         }
       }
