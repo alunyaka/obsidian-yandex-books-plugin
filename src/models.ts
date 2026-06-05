@@ -34,6 +34,7 @@ export type BookMetadata = {
   rightsHolder?: string;
   translator?: string;
   addedDate?: string;
+  startedDate?: string;
   finishedDate?: string;
   readingStatus?: string;
   authorUrl?: string;

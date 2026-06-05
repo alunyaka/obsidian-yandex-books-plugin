@@ -36,6 +36,7 @@ type FileTemplateVariables = CommonTemplateVariables & {
   rightsHolder: string;
   translator: string;
   addedDate: string;
+  startedDate: string;
   finishedDate: string;
   readingStatus: string;
   authorUrl: string;
@@ -128,6 +129,7 @@ export const fileTemplateVariables = (
     rightsHolder: metadata?.rightsHolder,
     translator: metadata?.translator,
     addedDate: metadata?.addedDate,
+    startedDate: metadata?.startedDate,
     finishedDate: metadata?.finishedDate,
     readingStatus: metadata?.readingStatus,
     authorUrl: metadata?.authorUrl,

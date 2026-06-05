@@ -89,8 +89,16 @@ const getCardBook = (card: YandexLibraryCard | undefined): YandexBook | undefine
   return card?.book ?? card?.audiobook ?? card?.comicbook;
 };
 
-const getBookId = (book: YandexBook | undefined): string | undefined => {
-  return book?.uuid;
+const getBookIds = (
+  book: YandexBook | undefined,
+  libraryCard?: YandexLibraryCard
+): string[] => {
+  return compact([
+    book?.uuid,
+    book?.init_uuid,
+    libraryCard?.document_uuid,
+    libraryCard?.chapter_uuid,
+  ]);
 };
 
 const mergeBook = (primary: YandexBook, fallback?: YandexBook): YandexBook => {
@@ -101,9 +109,22 @@ const getPersonNames = (people: YandexPerson[] | YandexPerson | undefined): stri
   return compact(asArray(people).map((person) => person.name));
 };
 
+const getNames = (
+  values: YandexPerson[] | YandexPerson | string[] | string | undefined
+): string[] => {
+  return compact(
+    asArray(values).map((value) => (typeof value === 'string' ? value : value.name))
+  );
+};
+
 const readingStatus = (libraryCard?: YandexLibraryCard): string | undefined => {
-  const state = firstString([libraryCard?.state, libraryCard?.status])?.toLowerCase();
-  const progress = libraryCard?.reading_progress;
+  const state = firstString([
+    libraryCard?.state,
+    libraryCard?.status,
+    libraryCard?.reading_status,
+    libraryCard?.read_state,
+  ])?.toLowerCase();
+  const progress = libraryCard?.reading_progress ?? libraryCard?.progress;
 
   if (
     state === 'finished' ||
@@ -132,19 +153,24 @@ const mapBookMetadata = (book: YandexBook, libraryCard?: YandexLibraryCard): Boo
     isbn: firstString([book.isbn13, book.isbn_13, book.isbn, book.isbn10, book.isbn_10]),
     pages: firstString([book.paper_pages, book.pages]),
     publicationDate: firstMetadataDate([book.publication_date, book.publication_year]),
-    publisher: firstString([book.publisher, book.imprint]),
-    description: firstString([book.description]),
+    publisher: firstString([book.publisher, ...getNames(book.publishers), book.imprint]),
+    description: firstString([book.description, book.annotation, book.editor_annotation]),
     rightsHolder: firstString([
       book.legal_rights_holder,
       book.rights_holder,
       book.copyright_holder,
     ]),
     translator: translator === '' ? undefined : translator,
-    addedDate: firstMetadataDate([libraryCard?.added_at]),
+    addedDate: firstMetadataDate([libraryCard?.added_at, libraryCard?.accessed_at]),
+    startedDate: firstMetadataDate([libraryCard?.started_at]),
     finishedDate: firstMetadataDate([
       libraryCard?.finished_at,
       libraryCard?.completed_at,
       libraryCard?.read_at,
+      libraryCard?.date_finished,
+      libraryCard?.finished_on,
+      libraryCard?.completed_on,
+      libraryCard?.read_date,
     ]),
     readingStatus: readingStatus(libraryCard),
   };
@@ -197,11 +223,13 @@ export const mapQuotesToBookHighlights = (
   const libraryCardsByBookId = new Map<string, YandexLibraryCard>();
 
   libraryCards.forEach((card) => {
-    const bookId = getBookId(getCardBook(card));
+    const bookIds = getBookIds(getCardBook(card), card);
 
-    if (bookId != null && bookId !== '' && !libraryCardsByBookId.has(bookId)) {
-      libraryCardsByBookId.set(bookId, card);
-    }
+    bookIds.forEach((bookId) => {
+      if (!libraryCardsByBookId.has(bookId)) {
+        libraryCardsByBookId.set(bookId, card);
+      }
+    });
   });
 
   quotes.forEach((quote) => {

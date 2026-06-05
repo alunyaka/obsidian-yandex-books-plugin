@@ -71,6 +71,10 @@
           <td>Date added to your library</td>
         </tr>
         <tr>
+          <td><Chip title={'startedDate'} /></td>
+          <td>Date started reading</td>
+        </tr>
+        <tr>
           <td><Chip title={'finishedDate'} /></td>
           <td>Date finished reading</td>
         </tr>

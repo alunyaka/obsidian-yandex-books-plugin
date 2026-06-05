@@ -1,32 +1,22 @@
 ---
-yandex-books-bookId: {{ bookId | yaml }}
-yandex-books-title: {{ longTitle | yaml }}
-yandex-books-author: {{ author | yaml }}
-yandex-books-highlightsCount: {{ highlightsCount }}
-{% if url %}yandex-books-bookUrl: {{ url | yaml }}{% endif %}
-{% if lastAnnotatedDate %}yandex-books-lastAnnotatedDate: {{ lastAnnotatedDate | yaml }}{% endif %}
-{% if imageUrl %}yandex-books-bookImageUrl: {{ imageUrl | yaml }}{% endif %}
+bookId: {{ bookId | yaml }}
+title: {{ longTitle | yaml }}
+author: {{ author | yaml }}
+highlightsCount: {{ highlightsCount }}
+{% if url %}bookUrl: {{ url | yaml }}{% endif %}
+{% if lastAnnotatedDate %}lastAnnotatedDate: {{ lastAnnotatedDate | yaml }}{% endif %}
+{% if publisher %}publisher: {{publisher | yaml}}{% endif %}
+{% if pages %}pages: {{pages}}{% endif %}
+{% if publicationDate %}publication_date: {{publicationDate | yaml}}{% endif %}
+{% if readingStatus %}status: {{readingStatus}}{% endif %}
+{% if addedDate %}added_date: {{addedDate}}{% endif %}
+{% if startedDate %}started_date: {{startedDate}}{% endif %}
+{% if finishedDate %}finished_date: {{finishedDate}}{% endif %}
+{% if translator %}translators: {{translator | yaml}}{% endif %}
+{% if imageUrl %}ImageUrl: {{ imageUrl | yaml }}{% endif %}
 ---
 # {{title}}
-## Metadata
-{% trim %}
-{% if authorUrl %}
-* Author: [{{author}}]({{authorUrl}})
-{% elif author %}
-* Author: [[{{author}}]]
-{% endif %}
-{% if bookId %}* Yandex Books ID: {{bookId}}{% endif %}
-{% if isbn %}* ISBN: {{isbn}}{% endif %}
-{% if pages %}* Pages: {{pages}}{% endif %}
-{% if publicationDate %}* Publication: {{publicationDate}}{% endif %}
-{% if publisher %}* Publisher: {{publisher}}{% endif %}
-{% if rightsHolder %}* Rights holder: {{rightsHolder}}{% endif %}
-{% if translator %}* Translator: {{translator}}{% endif %}
-{% if readingStatus %}* Reading status: {{readingStatus}}{% endif %}
-{% if addedDate %}* Added to library: {{addedDate}}{% endif %}
-{% if finishedDate %}* Finished reading: {{finishedDate}}{% endif %}
-{% if url %}* [Yandex Books]({{url}}){% endif %}
-{% endtrim %}
+{% if imageUrl %}![]({{imageUrl}}){% endif %}
 {% if description %}
 
 ## Description

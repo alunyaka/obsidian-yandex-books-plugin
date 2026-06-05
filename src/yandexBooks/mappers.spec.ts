@@ -107,6 +107,7 @@ describe('mapQuotesToBookHighlights', () => {
     const libraryCards: YandexLibraryCard[] = [
       {
         added_at: 1_700_049_600,
+        started_at: 1_700_049_600,
         finished_at: 1_700_136_000,
         state: 'finished',
         book: {
@@ -133,6 +134,7 @@ describe('mapQuotesToBookHighlights', () => {
       rightsHolder: 'Rights Holder',
       translator: 'First Translator, Second Translator',
       addedDate: '2023-11-15',
+      startedDate: '2023-11-15',
       finishedDate: '2023-11-16',
       readingStatus: 'Finished',
     });
@@ -194,5 +196,63 @@ describe('mapQuotesToBookHighlights', () => {
 
     expect(entry.metadata?.finishedDate).toBeUndefined();
     expect(entry.metadata?.readingStatus).toBe('Finished');
+  });
+
+  it('maps alternate finished date and reading status fields', () => {
+    const [entry] = mapQuotesToBookHighlights(
+      [
+        {
+          uuid: 'quote-1',
+          content: 'Quote',
+          item_uuid: 'book-1',
+          book: {
+            uuid: 'book-1',
+            title: 'Book',
+          },
+        },
+      ],
+      [
+        {
+          date_finished: 1_700_136_000,
+          reading_status: 'completed',
+          book: {
+            uuid: 'book-1',
+          },
+        },
+      ]
+    );
+
+    expect(entry.metadata?.finishedDate).toBe('2023-11-16');
+    expect(entry.metadata?.readingStatus).toBe('Finished');
+  });
+
+  it('matches library cards by document ids when book uuid differs', () => {
+    const [entry] = mapQuotesToBookHighlights(
+      [
+        {
+          uuid: 'quote-1',
+          content: 'Quote',
+          item_uuid: 'quote-book-id',
+          book: {
+            uuid: 'quote-book-id',
+            title: 'Book',
+          },
+        },
+      ],
+      [
+        {
+          document_uuid: 'quote-book-id',
+          progress: 8,
+          state: 'reading',
+          book: {
+            uuid: 'library-book-id',
+            paper_pages: 275,
+          },
+        },
+      ]
+    );
+
+    expect(entry.metadata?.pages).toBe('275');
+    expect(entry.metadata?.readingStatus).toBe('Reading');
   });
 });

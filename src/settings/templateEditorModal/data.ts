@@ -14,6 +14,7 @@ const data: BookHighlight[] = [
       description: 'A satirical novella about power, language, and revolution.',
       readingStatus: 'finished',
       addedDate: '2026-01-12',
+      startedDate: '2026-01-13',
       finishedDate: '2026-01-18',
     },
     highlights: [

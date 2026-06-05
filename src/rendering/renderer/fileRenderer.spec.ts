@@ -1,6 +1,7 @@
 import faker from 'faker';
 
 import type { BookHighlight } from '~/models';
+import defaultFileTemplate from '~/rendering/templates/bookTemplate.njk';
 
 import FileRenderer from './fileRenderer';
 
@@ -32,6 +33,7 @@ describe('FileRenderer', () => {
           rightsHolder: faker.company.companyName(),
           translator: faker.name.findName(),
           addedDate: '2026-01-12',
+          startedDate: '2026-01-13',
           finishedDate: '2026-01-18',
           readingStatus: 'finished',
           authorUrl: faker.internet.url(),
@@ -60,6 +62,7 @@ describe('FileRenderer', () => {
         ['{{rightsHolder}}', bookHighlight.metadata.rightsHolder],
         ['{{translator}}', bookHighlight.metadata.translator],
         ['{{addedDate}}', bookHighlight.metadata.addedDate],
+        ['{{startedDate}}', bookHighlight.metadata.startedDate],
         ['{{finishedDate}}', bookHighlight.metadata.finishedDate],
         ['{{readingStatus}}', bookHighlight.metadata.readingStatus],
         ['{{authorUrl}}', bookHighlight.metadata.authorUrl],
@@ -99,6 +102,7 @@ describe('FileRenderer', () => {
         ['{{rightsHolder}}', ''],
         ['{{translator}}', ''],
         ['{{addedDate}}', ''],
+        ['{{startedDate}}', ''],
         ['{{finishedDate}}', ''],
         ['{{readingStatus}}', ''],
         ['{{authorUrl}}', ''],
@@ -220,6 +224,62 @@ book-id: "book:1"
 book-title: "Title with \\"quotes\\": extended"
 ---
 # Title with "quotes"
+`);
+    });
+
+    it('renders the default Yandex Books file template', () => {
+      const bookHighlight: BookHighlight = {
+        book: {
+          id: 'book:1',
+          title: 'Title with "quotes": extended',
+          author: 'Test Author',
+          url: 'https://books.yandex.ru/books/book:1',
+          imageUrl: 'https://example.com/cover.jpg',
+          lastAnnotatedDate: new Date(2026, 0, 31),
+        },
+        metadata: {
+          pages: '275',
+          publicationDate: '2025-09-11',
+          publisher: 'Test Publisher',
+          description: 'Book description',
+          translator: 'Test Translator',
+          addedDate: '2026-01-12',
+          startedDate: '2026-01-13',
+          finishedDate: '2026-01-18',
+          readingStatus: 'Finished',
+        },
+        highlights: [{ id: 'H1', text: 'highlighted text' }],
+      };
+
+      const renderer = new FileRenderer(defaultFileTemplate, '- {{text}}');
+
+      expect(renderer.render(bookHighlight)).toBe(`---
+bookId: "book:1"
+title: "Title with \\"quotes\\": extended"
+author: "Test Author"
+highlightsCount: 1
+bookUrl: "https://books.yandex.ru/books/book:1"
+lastAnnotatedDate: "2026-01-31"
+publisher: "Test Publisher"
+pages: 275
+publication_date: "2025-09-11"
+status: Finished
+added_date: 2026-01-12
+started_date: 2026-01-13
+finished_date: 2026-01-18
+translators: "Test Translator"
+ImageUrl: "https://example.com/cover.jpg"
+---
+# Title with "quotes"
+![](https://example.com/cover.jpg)
+
+
+## Description
+Book description
+
+
+## Highlights
+- highlighted text ^ref-H1
 `);
     });
   });

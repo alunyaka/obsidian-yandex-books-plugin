@@ -103,6 +103,7 @@ export default class YandexBooksClient {
     this.log('Library books without quotes', {
       count: libraryBooksWithoutQuotes.length,
     });
+    this.logLibraryCardDiagnostics(quoteBookIds, libraryCards);
     this.log('Mapping quotes to books', {
       quotes: quotes.length,
       uniqueBooks: quoteBookIds.length,
@@ -414,6 +415,72 @@ export default class YandexBooksClient {
           .filter((value): value is string => value != null && value !== '')
       ),
     ];
+  }
+
+  private logLibraryCardDiagnostics(
+    quoteBookIds: string[],
+    libraryCards: YandexLibraryCard[]
+  ): void {
+    if (this.debug == null) {
+      return;
+    }
+
+    const libraryCardsByBookId = new Map<string, YandexLibraryCard>();
+
+    libraryCards.forEach((card) => {
+      const bookIds = this.getLibraryCardBookIds(card);
+
+      bookIds.forEach((bookId) => {
+        if (!libraryCardsByBookId.has(bookId)) {
+          libraryCardsByBookId.set(bookId, card);
+        }
+      });
+    });
+
+    quoteBookIds.forEach((bookId) => {
+      const card = libraryCardsByBookId.get(bookId);
+
+      this.log('Library card metadata fields', {
+        bookId,
+        matched: card == null ? 'no' : 'yes',
+        cardKeys: card == null ? undefined : Object.keys(card).sort().join(','),
+        bookKeys:
+          card == null
+            ? undefined
+            : Object.keys(this.getLibraryCardBook(card) ?? {})
+                .sort()
+                .join(','),
+        state: card?.state,
+        status: card?.status,
+        readingStatus: card?.reading_status,
+        readState: card?.read_state,
+        progress: card?.progress,
+        readingProgress: card?.reading_progress,
+        addedAt: card?.added_at,
+        finishedAt: card?.finished_at,
+        completedAt: card?.completed_at,
+        readAt: card?.read_at,
+        dateFinished: card?.date_finished,
+        finishedOn: card?.finished_on,
+        completedOn: card?.completed_on,
+        readDate: card?.read_date,
+        accessedAt: card?.accessed_at,
+        startedAt: card?.started_at,
+        lastReadAt: card?.last_read_at,
+      });
+    });
+  }
+
+  private getLibraryCardBook(card: YandexLibraryCard) {
+    return card.book ?? card.audiobook ?? card.comicbook;
+  }
+
+  private getLibraryCardBookIds(card: YandexLibraryCard): string[] {
+    const book = this.getLibraryCardBook(card);
+
+    return [book?.uuid, book?.init_uuid, card.document_uuid, card.chapter_uuid].filter(
+      (value): value is string => value != null && value !== ''
+    );
   }
 
   private getQuoteBookTitles(quotes: YandexQuote[]): string[] {
