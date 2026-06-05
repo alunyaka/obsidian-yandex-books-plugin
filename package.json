@@ -1,17 +1,17 @@
 {
-  "name": "obsidian-kindle-plugin",
+  "name": "obsidian-yandex-books-plugin",
   "version": "2.3.1",
-  "description": "Sync book highlights into Obsidian",
+  "description": "Sync Yandex Books highlights into Obsidian",
   "main": "src/index.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hadynz/obsidian-kindle-highlights.git"
+    "url": "https://github.com/alunyaka/obsidian-yandex-books-plugin.git"
   },
   "keywords": [],
   "author": {
-    "name": "Hady Osman",
-    "email": "hadyos@gmail.com",
-    "url": "https://hady.geek.nz"
+    "name": "Andrey Lunyaka",
+    "email": "52238296+alunyaka@users.noreply.github.com",
+    "url": "https://github.com/alunyaka"
   },
   "license": "MIT",
   "scripts": {

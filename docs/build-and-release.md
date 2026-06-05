@@ -31,7 +31,7 @@ Three files must be updated together for any version bump:
 4. `git tag <version> && git push origin <version>`
 5. Create GitHub release: `gh release create <version> --title "..." --notes "..."`
 6. Release workflow (`.github/workflows/releases.yml`) triggers on `release: [published]`
-7. Workflow builds and uploads: `main.js`, `manifest.json`, `obsidian-kindle-plugin.zip`
+7. Workflow builds and uploads: `main.js`, `manifest.json`, `obsidian-yandex-books-plugin.zip`
 8. Obsidian's community plugin registry picks up the new release automatically
 
 ## Local Testing in Obsidian
@@ -40,7 +40,7 @@ Copy built artifacts into a vault's plugin directory:
 
 ```bash
 VAULT="/Users/hosman/Documents/Test Vault/Test Vault"
-PLUGIN_DIR="$VAULT/.obsidian/plugins/obsidian-kindle-plugin"
+PLUGIN_DIR="$VAULT/.obsidian/plugins/obsidian-yandex-books-plugin"
 mkdir -p "$PLUGIN_DIR"
 cp dist/main.js dist/manifest.json "$PLUGIN_DIR/"
 ```

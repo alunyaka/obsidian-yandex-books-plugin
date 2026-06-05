@@ -1,10 +1,10 @@
 {
-  "id": "obsidian-kindle-plugin",
-  "name": "Kindle Highlights",
+  "id": "obsidian-yandex-books-plugin",
+  "name": "Yandex Books Highlights",
   "version": "2.3.1",
-  "description": "Sync book highlights into Obsidian",
+  "description": "Sync Yandex Books highlights into Obsidian",
   "minAppVersion": "0.10.2",
-  "author": "Hady Osman",
-  "authorUrl": "https://hady.geek.nz",
+  "author": "Andrey Lunyaka",
+  "authorUrl": "https://github.com/alunyaka",
   "isDesktopOnly": true
 }
