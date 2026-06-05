@@ -55,6 +55,30 @@
           <td>Name of publisher</td>
         </tr>
         <tr>
+          <td><Chip title={'description'} /></td>
+          <td>Book description</td>
+        </tr>
+        <tr>
+          <td><Chip title={'rightsHolder'} /></td>
+          <td>Book rights holder</td>
+        </tr>
+        <tr>
+          <td><Chip title={'translator'} /></td>
+          <td>Book translator</td>
+        </tr>
+        <tr>
+          <td><Chip title={'addedDate'} /></td>
+          <td>Date added to your library</td>
+        </tr>
+        <tr>
+          <td><Chip title={'finishedDate'} /></td>
+          <td>Date finished reading</td>
+        </tr>
+        <tr>
+          <td><Chip title={'readingStatus'} /></td>
+          <td>Reading status</td>
+        </tr>
+        <tr>
           <td><Chip title={'authorUrl'} /></td>
           <td>Author page URL</td>
         </tr>

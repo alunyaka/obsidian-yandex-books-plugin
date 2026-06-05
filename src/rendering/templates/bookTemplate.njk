@@ -20,8 +20,18 @@ yandex-books-highlightsCount: {{ highlightsCount }}
 {% if pages %}* Pages: {{pages}}{% endif %}
 {% if publicationDate %}* Publication: {{publicationDate}}{% endif %}
 {% if publisher %}* Publisher: {{publisher}}{% endif %}
+{% if rightsHolder %}* Rights holder: {{rightsHolder}}{% endif %}
+{% if translator %}* Translator: {{translator}}{% endif %}
+{% if readingStatus %}* Reading status: {{readingStatus}}{% endif %}
+{% if addedDate %}* Added to library: {{addedDate}}{% endif %}
+{% if finishedDate %}* Finished reading: {{finishedDate}}{% endif %}
 {% if url %}* [Yandex Books]({{url}}){% endif %}
 {% endtrim %}
+{% if description %}
+
+## Description
+{{description}}
+{% endif %}
 
 ## Highlights
 {{highlights}}

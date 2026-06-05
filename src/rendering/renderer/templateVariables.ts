@@ -32,6 +32,12 @@ type FileTemplateVariables = CommonTemplateVariables & {
   pages: string;
   publicationDate: string;
   publisher: string;
+  description: string;
+  rightsHolder: string;
+  translator: string;
+  addedDate: string;
+  finishedDate: string;
+  readingStatus: string;
   authorUrl: string;
   highlightsCount: number;
   highlights: string;
@@ -118,6 +124,12 @@ export const fileTemplateVariables = (
     pages: metadata?.pages,
     publicationDate: metadata?.publicationDate,
     publisher: metadata?.publisher,
+    description: metadata?.description,
+    rightsHolder: metadata?.rightsHolder,
+    translator: metadata?.translator,
+    addedDate: metadata?.addedDate,
+    finishedDate: metadata?.finishedDate,
+    readingStatus: metadata?.readingStatus,
     authorUrl: metadata?.authorUrl,
     highlightsCount: highlights.length,
     highlights: renderedHighlights,

@@ -1,5 +1,5 @@
 import { mapQuotesToBookHighlights } from './mappers';
-import type { YandexQuote } from './types';
+import type { YandexLibraryCard, YandexQuote } from './types';
 
 describe('mapQuotesToBookHighlights', () => {
   it('groups quotes by book and maps them to sync models', () => {
@@ -90,5 +90,109 @@ describe('mapQuotesToBookHighlights', () => {
     ]);
 
     expect(entry.book.author).toBe('Single Author');
+  });
+
+  it('enriches book metadata from library cards', () => {
+    const quotes: YandexQuote[] = [
+      {
+        uuid: 'quote-1',
+        content: 'Quote',
+        item_uuid: 'book-1',
+        book: {
+          uuid: 'book-1',
+          title: 'Book',
+        },
+      },
+    ];
+    const libraryCards: YandexLibraryCard[] = [
+      {
+        added_at: 1_700_049_600,
+        finished_at: 1_700_136_000,
+        state: 'finished',
+        book: {
+          uuid: 'book-1',
+          description: 'Book description',
+          isbn13: '9781234567890',
+          paper_pages: 320,
+          publication_date: 1_700_049_600,
+          publisher: 'Publisher',
+          legal_rights_holder: 'Rights Holder',
+          translators_objects: [{ name: 'First Translator' }, { name: 'Second Translator' }],
+        },
+      },
+    ];
+
+    const [entry] = mapQuotesToBookHighlights(quotes, libraryCards);
+
+    expect(entry.metadata).toEqual({
+      isbn: '9781234567890',
+      pages: '320',
+      publicationDate: '2023-11-15',
+      publisher: 'Publisher',
+      description: 'Book description',
+      rightsHolder: 'Rights Holder',
+      translator: 'First Translator, Second Translator',
+      addedDate: '2023-11-15',
+      finishedDate: '2023-11-16',
+      readingStatus: 'Finished',
+    });
+  });
+
+  it('does not map empty finished timestamps to 1970 dates', () => {
+    const [entry] = mapQuotesToBookHighlights(
+      [
+        {
+          uuid: 'quote-1',
+          content: 'Quote',
+          item_uuid: 'book-1',
+          book: {
+            uuid: 'book-1',
+            title: 'Book',
+          },
+        },
+      ],
+      [
+        {
+          finished_at: 0,
+          reading_progress: 42,
+          state: 'reading',
+          book: {
+            uuid: 'book-1',
+          },
+        },
+      ]
+    );
+
+    expect(entry.metadata?.finishedDate).toBeUndefined();
+    expect(entry.metadata?.readingStatus).toBe('Reading');
+  });
+
+  it('infers finished status from complete reading progress', () => {
+    const [entry] = mapQuotesToBookHighlights(
+      [
+        {
+          uuid: 'quote-1',
+          content: 'Quote',
+          item_uuid: 'book-1',
+          book: {
+            uuid: 'book-1',
+            title: 'Book',
+          },
+        },
+      ],
+      [
+        {
+          finished_at: 0,
+          reading_progress: 100,
+          state: 'reading',
+          book: {
+            uuid: 'book-1',
+          },
+        },
+      ]
+    );
+
+    expect(entry.metadata?.finishedDate).toBeUndefined();
+    expect(entry.metadata?.readingStatus).toBe('Finished');
   });
 });

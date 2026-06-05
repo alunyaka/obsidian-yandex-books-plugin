@@ -60,12 +60,17 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
     const bookHighlights = await client.getBookHighlights();
     ee.emit(
       'syncLog',
-      `Loaded ${bookHighlights.length} book${bookHighlights.length === 1 ? '' : 's'} with quotes`
+      `Loaded ${bookHighlights.length} book${
+        bookHighlights.length === 1 ? '' : 's'
+      } with quotes`
     );
     const remoteBooks = bookHighlights.map((entry) => entry.book);
     const booksToSync = syncManager.filterBooksToSync(remoteBooks);
     const highlightsByBookId = new Map(
       bookHighlights.map((entry) => [entry.book.id, entry.highlights])
+    );
+    const metadataByBookId = new Map(
+      bookHighlights.map((entry) => [entry.book.id, entry.metadata])
     );
 
     ee.emit('fetchingBooksSuccess', booksToSync, remoteBooks);
@@ -77,11 +82,15 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
       }
 
       const highlights = highlightsByBookId.get(book.id) ?? [];
+      const metadata = metadataByBookId.get(book.id) ?? {};
       ee.emit('syncBook', book, index);
-      ee.emit('syncLog', `Found ${highlights.length} quote${highlights.length === 1 ? '' : 's'}`);
+      ee.emit(
+        'syncLog',
+        `Found ${highlights.length} quote${highlights.length === 1 ? '' : 's'}`
+      );
 
       try {
-        await syncManager.syncBook(book, highlights);
+        await syncManager.syncBook(book, highlights, metadata);
         syncCancellation.incrementSynced();
         ee.emit('syncBookSuccess', book, highlights);
       } catch (error) {

@@ -92,7 +92,9 @@ export default class YandexBooksClient {
     this.throwIfAborted();
     const quoteBookIds = this.getUniqueQuoteBookIds(quotes);
     const libraryBookIds = this.getUniqueLibraryBookIds(libraryCards);
-    const libraryBooksWithoutQuotes = libraryBookIds.filter((bookId) => !quoteBookIds.includes(bookId));
+    const libraryBooksWithoutQuotes = libraryBookIds.filter(
+      (bookId) => !quoteBookIds.includes(bookId)
+    );
 
     this.log('Quote books', {
       count: quoteBookIds.length,
@@ -106,7 +108,7 @@ export default class YandexBooksClient {
       uniqueBooks: quoteBookIds.length,
     });
     this.throwIfAborted();
-    return mapQuotesToBookHighlights(quotes);
+    return mapQuotesToBookHighlights(quotes, libraryCards);
   }
 
   public destroy(): void {
@@ -247,7 +249,9 @@ export default class YandexBooksClient {
     try {
       return JSON.parse(result.text) as T;
     } catch (error) {
-      throw new YandexBooksApiError(`Yandex Books API returned invalid JSON: ${String(error)}`);
+      throw new YandexBooksApiError(
+        `Yandex Books API returned invalid JSON: ${String(error)}`
+      );
     }
   }
 
@@ -299,7 +303,9 @@ export default class YandexBooksClient {
         error: String(error),
       });
       throw new YandexBooksApiError(
-        `Yandex Books API network request failed for ${this.requestLabel(url)}: ${String(error)}`
+        `Yandex Books API network request failed for ${this.requestLabel(url)}: ${String(
+          error
+        )}`
       );
     } finally {
       this.options.signal?.removeEventListener('abort', abortFetch);
@@ -395,7 +401,9 @@ export default class YandexBooksClient {
   }
 
   private getQuoteId(quote: YandexQuote): string {
-    return quote.uuid ?? quote.cfi ?? `${quote.item_uuid ?? 'quote'}-${quote.created_at ?? ''}`;
+    return (
+      quote.uuid ?? quote.cfi ?? `${quote.item_uuid ?? 'quote'}-${quote.created_at ?? ''}`
+    );
   }
 
   private getUniqueLibraryBookIds(libraryCards: YandexLibraryCard[]): string[] {

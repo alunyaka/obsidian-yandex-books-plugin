@@ -30,14 +30,20 @@ export default class SyncManager {
       return booksToSync;
     }
 
-    const ignoredLower = ignoredBooks.map((t) => t.toLowerCase().trim()).filter((t) => t !== '');
+    const ignoredLower = ignoredBooks
+      .map((t) => t.toLowerCase().trim())
+      .filter((t) => t !== '');
     return booksToSync.filter((book) => {
       const titleLower = book.title.toLowerCase().trim();
       return !ignoredLower.some((pattern) => titleLower.includes(pattern));
     });
   }
 
-  public async syncBook(book: Book, highlights: Highlight[]): Promise<void> {
+  public async syncBook(
+    book: Book,
+    highlights: Highlight[],
+    metadata: BookMetadata = {}
+  ): Promise<void> {
     if (highlights.length === 0) {
       return; // No highlights for book. Skip sync
     }
@@ -45,31 +51,34 @@ export default class SyncManager {
     const file = this.fileManager.getSyncedBookFile(book);
 
     if (file == null) {
-      await this.createBook(book, highlights);
+      await this.createBook(book, highlights, metadata);
     } else {
-      await this.resyncBook(file, book, highlights);
+      await this.resyncBook(file, book, highlights, metadata);
     }
   }
 
   public async resyncBook(
     file: SyncedBookFile,
     remoteBook: Book,
-    remoteHighlights: Highlight[]
+    remoteHighlights: Highlight[],
+    metadata: BookMetadata = {}
   ): Promise<DiffResult[]> {
     const diffManager = await DiffManager.create(this.fileManager, file);
 
     const diffs = diffManager.diff(remoteHighlights);
 
     if (diffs.length > 0) {
-      await diffManager.applyDiffs(remoteBook, remoteHighlights, diffs);
+      await diffManager.applyDiffs(remoteBook, remoteHighlights, diffs, metadata);
     }
 
     return diffs;
   }
 
-  private async createBook(book: Book, highlights: Highlight[]): Promise<void> {
-    const metadata: BookMetadata = {};
-
+  private async createBook(
+    book: Book,
+    highlights: Highlight[],
+    metadata: BookMetadata = {}
+  ): Promise<void> {
     const content = getRenderers().fileRenderer.render({ book, highlights, metadata });
 
     await this.fileManager.createFile(book, metadata, content);

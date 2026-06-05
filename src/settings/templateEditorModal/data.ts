@@ -9,6 +9,12 @@ const data: BookHighlight[] = [
     },
     metadata: {
       publicationDate: '1945',
+      pages: '112',
+      publisher: 'Secker & Warburg',
+      description: 'A satirical novella about power, language, and revolution.',
+      readingStatus: 'finished',
+      addedDate: '2026-01-12',
+      finishedDate: '2026-01-18',
     },
     highlights: [
       {
@@ -29,6 +35,9 @@ const data: BookHighlight[] = [
     },
     metadata: {
       publicationDate: '2016',
+      pages: '336',
+      publisher: 'Harvard Business Review Press',
+      rightsHolder: 'Harvard Business School Publishing',
     },
     highlights: [
       {
@@ -53,6 +62,10 @@ const data: BookHighlight[] = [
     },
     metadata: {
       publicationDate: '2015',
+      isbn: '9781594634024',
+      pages: '336',
+      publisher: 'Riverhead Books',
+      translator: 'Sample Translator',
     },
     highlights: [
       {

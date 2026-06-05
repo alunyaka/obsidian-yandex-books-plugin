@@ -30,6 +30,12 @@ export type BookMetadata = {
   pages?: string;
   publicationDate?: string;
   publisher?: string;
+  description?: string;
+  rightsHolder?: string;
+  translator?: string;
+  addedDate?: string;
+  finishedDate?: string;
+  readingStatus?: string;
   authorUrl?: string;
 };
 

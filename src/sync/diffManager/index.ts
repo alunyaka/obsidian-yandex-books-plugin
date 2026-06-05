@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import type FileManager from '~/fileManager';
-import type { Highlight } from '~/models';
+import type { BookMetadata, Highlight } from '~/models';
 import type { Book, SyncedBookFile } from '~/models';
 import { getRenderers } from '~/rendering';
 import { HighlightIdBlockRefPrefix } from '~/rendering/renderer';
@@ -31,7 +31,10 @@ export class DiffManager {
     return manager;
   }
 
-  private constructor(private fileManager: FileManager, private syncedBookFile: SyncedBookFile) {}
+  private constructor(
+    private fileManager: FileManager,
+    private syncedBookFile: SyncedBookFile
+  ) {}
 
   private async load(): Promise<void> {
     const fileContents = await this.fileManager.readFile(this.syncedBookFile);
@@ -61,7 +64,8 @@ export class DiffManager {
   public async applyDiffs(
     remoteBook: Book,
     remoteHighlights: Highlight[],
-    diffs: DiffResult[]
+    diffs: DiffResult[],
+    metadata: BookMetadata = {}
   ): Promise<void> {
     const renderers = getRenderers();
     const highlightRenderer = renderers.highlightRenderer;
@@ -85,7 +89,7 @@ export class DiffManager {
     const renderedFile = renderers.fileRenderer.render({
       book: remoteBook,
       highlights: remoteHighlights,
-      metadata: {},
+      metadata,
     });
 
     await this.fileManager.updateFile(this.syncedBookFile, modifiedFileContents, renderedFile);
