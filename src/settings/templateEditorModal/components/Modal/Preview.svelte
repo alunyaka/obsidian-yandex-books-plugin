@@ -31,6 +31,7 @@
     border: 1px solid var(--background-modifier-border);
     background-color: var(--background-primary);
     overflow: hidden;
+    max-height: 100%;
   }
 
   .wrapper *:last-child {
@@ -51,10 +52,13 @@
 
   pre {
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
     background-color: var(--background-secondary-alt);
     padding: 6px 10px;
     margin-top: 0;
     font-size: 0.8em;
+    max-height: 44vh;
+    overflow: auto;
   }
 
   h3,
@@ -65,6 +69,10 @@
 
   .text {
     font-size: 0.8em;
+  }
+
+  .dropdown {
+    max-width: 100%;
   }
 
   .label {

@@ -26,9 +26,9 @@ export class SettingsTab extends PluginSettingTab {
 
     this.templatesEditor();
     this.yandexAccount();
-    this.debugQuoteLimit();
     this.highlightsFolder();
     this.ignoredBooks();
+    this.debugSettings();
   }
 
   private templatesEditor(): void {
@@ -119,8 +119,21 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  private debugQuoteLimit(): void {
-    const value = get(settingsStore).debugQuoteLimit;
+  private debugSettings(): void {
+    const settings = get(settingsStore);
+
+    new Setting(this.containerEl).setName('Debug').setHeading();
+
+    new Setting(this.containerEl)
+      .setName('Debug logging')
+      .setDesc(
+        'Show detailed Yandex Books API request logs in the sync modal and developer console.'
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(settings.debugLoggingEnabled).onChange((value) => {
+          settingsStore.actions.setDebugLoggingEnabled(value);
+        });
+      });
 
     new Setting(this.containerEl)
       .setName('Debug quote limit')
@@ -130,7 +143,7 @@ export class SettingsTab extends PluginSettingTab {
       .addText((text) => {
         text
           .setPlaceholder('No limit')
-          .setValue(value != null ? String(value) : '')
+          .setValue(settings.debugQuoteLimit != null ? String(settings.debugQuoteLimit) : '')
           .onChange((rawValue) => {
             const trimmed = rawValue.trim();
             const parsed = Number(trimmed);

@@ -69,7 +69,9 @@
 
 <style>
   .tabs-container {
+    height: 100%;
     flex-grow: inherit;
+    overflow: hidden;
   }
 
   .tabs-container--left {
@@ -79,12 +81,18 @@
   .tabs-container--right {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    min-height: 0;
   }
 
   .row-content {
     flex-grow: 1;
+    min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: row;
+    gap: 14px;
+    overflow: hidden;
   }
 
   .row-buttons {
@@ -101,12 +109,16 @@
   }
 
   .form {
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: auto;
   }
 
   .preview {
-    width: 350px;
+    flex: 0 0 min(360px, 38%);
+    min-width: 280px;
     padding: 10px;
+    overflow: auto;
   }
 
   .mod-cta.error {

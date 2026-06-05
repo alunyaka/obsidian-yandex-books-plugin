@@ -67,8 +67,11 @@ export default class TemplateEditorModal extends ObsidianModal {
     });
 
     this.modalEl.classList.add('mod-settings', 'mod-sidebar-layout');
-    this.modalEl.style.width = '85vw';
-    this.modalEl.style.height = '60vw';
+    this.modalEl.style.width = 'min(92vw, 1280px)';
+    this.modalEl.style.height = 'min(86vh, 760px)';
+    this.modalEl.style.maxHeight = '86vh';
+    this.contentEl.style.height = '100%';
+    this.contentEl.style.overflow = 'hidden';
 
     this.open();
   }

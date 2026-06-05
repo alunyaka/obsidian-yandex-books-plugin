@@ -16,6 +16,7 @@ type Settings = {
   yandexAuth: YandexAuthInfo;
   ignoredBooks: string[];
   debugQuoteLimit?: number;
+  debugLoggingEnabled: boolean;
 
   // Deprecated - delete eventually
   noteTemplate?: string;
@@ -30,6 +31,7 @@ const DEFAULT_SETTINGS: Settings = {
     isLoggedIn: false,
   },
   ignoredBooks: [],
+  debugLoggingEnabled: false,
 };
 
 const createSettingsStore = () => {
@@ -131,6 +133,13 @@ const createSettingsStore = () => {
     });
   };
 
+  const setDebugLoggingEnabled = (value: boolean) => {
+    store.update((state) => {
+      state.debugLoggingEnabled = value;
+      return state;
+    });
+  };
+
   return {
     store,
     subscribe: store.subscribe,
@@ -143,6 +152,7 @@ const createSettingsStore = () => {
       setYandexAuth,
       setIgnoredBooks,
       setDebugQuoteLimit,
+      setDebugLoggingEnabled,
     },
   };
 };

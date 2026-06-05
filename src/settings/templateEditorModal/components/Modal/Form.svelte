@@ -86,7 +86,8 @@
 
   textarea {
     width: 100%;
-    height: 400px;
+    min-height: 220px;
+    height: min(48vh, 420px);
     font-size: 0.8em;
     font-family: var(--font-monospace);
     resize: vertical;

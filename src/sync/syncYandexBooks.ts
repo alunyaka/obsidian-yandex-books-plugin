@@ -17,6 +17,7 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
   const settings = get(settingsStore);
   const auth = settings.yandexAuth;
   const debugQuoteLimit = settings.debugQuoteLimit;
+  const debugLoggingEnabled = settings.debugLoggingEnabled;
 
   if (!auth.isLoggedIn || auth.oauthToken == null) {
     ee.emit(
@@ -32,18 +33,20 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
   const syncManager = new SyncManager(fileManager);
   const client = new YandexBooksClient(
     auth.oauthToken,
-    (event) => {
-      const details =
-        event.details != null
-          ? ` ${Object.entries(event.details)
-              .map(([key, value]) => `${key}=${value ?? 'unknown'}`)
-              .join(' ')}`
-          : '';
-      const message = `${event.message}${details}`;
+    debugLoggingEnabled
+      ? (event) => {
+          const details =
+            event.details != null
+              ? ` ${Object.entries(event.details)
+                  .map(([key, value]) => `${key}=${value ?? 'unknown'}`)
+                  .join(' ')}`
+              : '';
+          const message = `${event.message}${details}`;
 
-      console.debug(`Yandex Books: ${message}`);
-      ee.emit('syncLog', message);
-    },
+          console.debug(`Yandex Books: ${message}`);
+          ee.emit('syncLog', message);
+        }
+      : undefined,
     { debugQuoteLimit, signal: syncCancellation.signal }
   );
 
