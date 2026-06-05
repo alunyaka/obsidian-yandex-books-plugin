@@ -30,6 +30,15 @@ export type YandexQuote = {
   uuid?: string;
 };
 
+export type YandexLibraryCard = {
+  audiobook?: YandexBook;
+  book?: YandexBook;
+  comicbook?: YandexBook;
+  reading_progress?: number;
+  state?: string;
+  uuid?: string;
+};
+
 export type YandexProfile = {
   user?: {
     id?: number | string;
@@ -40,4 +49,8 @@ export type YandexProfile = {
 
 export type YandexQuotesResponse = {
   quotes?: YandexQuote[];
+};
+
+export type YandexLibraryCardsResponse = {
+  library_cards?: YandexLibraryCard[];
 };

@@ -4,7 +4,13 @@ import { readYandexAuthInfo, YANDEX_BOOKS_SESSION_PARTITION } from '~/auth';
 import type { BookHighlight } from '~/models';
 
 import { mapQuotesToBookHighlights } from './mappers';
-import type { YandexProfile, YandexQuote, YandexQuotesResponse } from './types';
+import type {
+  YandexLibraryCard,
+  YandexLibraryCardsResponse,
+  YandexProfile,
+  YandexQuote,
+  YandexQuotesResponse,
+} from './types';
 
 const API_ORIGIN = 'https://api.bookmate.yandex.net';
 const REST_BASE_URL = `${API_ORIGIN}/api/v5`;
@@ -52,12 +58,20 @@ export default class YandexBooksClient {
       throw new YandexBooksApiError('Could not determine Yandex Books user id');
     }
 
+    const libraryCards = await this.getAllLibraryCards();
+    this.log('Loaded library cards', {
+      count: libraryCards.length,
+    });
+
     this.log('Resolved profile', {
       identifiers: userIds.map((candidate) => candidate.source).join(','),
     });
 
     const quotes = await this.getAllQuotesWithFallback(userIds);
-    this.log('Mapping quotes to books', { quotes: quotes.length });
+    this.log('Mapping quotes to books', {
+      quotes: quotes.length,
+      uniqueBooks: this.getUniqueQuoteBookIds(quotes).length,
+    });
     return mapQuotesToBookHighlights(quotes);
   }
 
@@ -82,6 +96,27 @@ export default class YandexBooksClient {
 
       if (page.length < PAGE_LIMIT) {
         return quotes;
+      }
+
+      offset += PAGE_LIMIT;
+    }
+  }
+
+  private async getAllLibraryCards(): Promise<YandexLibraryCard[]> {
+    const libraryCards: YandexLibraryCard[] = [];
+    let offset = 0;
+
+    while (true) {
+      this.log('Loading library page', { limit: PAGE_LIMIT, offset });
+      const response = await this.getJson<YandexLibraryCardsResponse>(
+        `/profile/library_cards?limit=${PAGE_LIMIT}&offset=${offset}`
+      );
+      const page = response.library_cards ?? [];
+      libraryCards.push(...page);
+      this.log('Loaded library page', { count: page.length, total: libraryCards.length });
+
+      if (page.length < PAGE_LIMIT) {
+        return libraryCards;
       }
 
       offset += PAGE_LIMIT;
@@ -239,6 +274,16 @@ export default class YandexBooksClient {
       seen.add(value);
       return [{ source: candidate.source, value }];
     });
+  }
+
+  private getUniqueQuoteBookIds(quotes: YandexQuote[]): string[] {
+    return [
+      ...new Set(
+        quotes
+          .map((quote) => quote.book?.uuid ?? quote.item_uuid)
+          .filter((value): value is string => value != null && value !== '')
+      ),
+    ];
   }
 
   private requestLabel(url: string): string {
