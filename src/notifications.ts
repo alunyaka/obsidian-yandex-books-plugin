@@ -1,15 +1,15 @@
 import { Notice } from 'obsidian';
 
 import { ee } from '~/eventEmitter';
-import type { KindleFile } from '~/models';
+import type { SyncedBookFile } from '~/models';
 import { shortenTitle } from '~/utils';
 
 export const registerNotifications = (): void => {
-  ee.on('resyncBook', (kindleFile) => {
-    new Notice(`Resyncing "${shortenTitle(kindleFile.book.title)}" book highlights`);
+  ee.on('resyncBook', (syncedBookFile) => {
+    new Notice(`Resyncing "${shortenTitle(syncedBookFile.book.title)}" book highlights`);
   });
 
-  ee.on('resyncComplete', (_kindleFile, diffCount) => {
+  ee.on('resyncComplete', (_syncedBookFile, diffCount) => {
     let message = 'No new highlights to resync';
 
     if (diffCount === 1) {
@@ -39,7 +39,7 @@ export const registerNotifications = (): void => {
     }
   });
 
-  ee.on('resyncFailure', (_file: KindleFile, message: string) => {
+  ee.on('resyncFailure', (_file: SyncedBookFile, message: string) => {
     new Notice(message);
   });
 };

@@ -1,7 +1,7 @@
 import { addIcon, Notice, Plugin } from 'obsidian';
 import { get } from 'svelte/store';
 
-import kindleIcon from '~/assets/kindleIcon.svg';
+import yandexBooksIcon from '~/assets/yandexBooksIcon.svg';
 import { ConfirmDeleteModal } from '~/components/confirmDeleteModal';
 import SyncModal from '~/components/syncModal';
 import { store as syncModalStore } from '~/components/syncModal/store';
@@ -12,28 +12,28 @@ import { SettingsTab } from '~/settings';
 import { initializeStores, settingsStore } from '~/store';
 import { syncCancellation } from '~/sync';
 
-addIcon('kindle', kindleIcon);
+addIcon('yandex-books', yandexBooksIcon);
 
 const SYNC_STATUS_MESSAGES: Record<string, string> = {
-  'sync:fetching-books': 'Kindle: Loading library…',
-  'sync:syncing': 'Kindle: Syncing…',
-  'sync:cancelling': 'Kindle: Cancelling…',
+  'sync:fetching-books': 'Yandex Books: Loading library…',
+  'sync:syncing': 'Yandex Books: Syncing…',
+  'sync:cancelling': 'Yandex Books: Cancelling…',
 };
 
-export default class KindlePlugin extends Plugin {
+export default class YandexBooksPlugin extends Plugin {
   private fileManager!: FileManager;
   private ribbonIconEl!: HTMLElement;
   private statusBarEl!: HTMLElement;
   private storeUnsubscribe: (() => void) | undefined;
 
   public async onload(): Promise<void> {
-    console.log('Kindle Highlights plugin: loading plugin', new Date().toLocaleString());
+    console.log('Yandex Books Highlights plugin: loading plugin', new Date().toLocaleString());
 
     this.fileManager = new FileManager(this.app.vault, this.app.metadataCache);
 
     await initializeStores(this, this.fileManager);
 
-    this.ribbonIconEl = this.addRibbonIcon('kindle', 'Sync your Kindle highlights', () => {
+    this.ribbonIconEl = this.addRibbonIcon('yandex-books', 'Sync your Yandex Books highlights', () => {
       this.showSyncModal();
     });
 
@@ -49,18 +49,18 @@ export default class KindlePlugin extends Plugin {
 
       if (isSyncing && state.status === 'sync:syncing' && state.currentJob) {
         const progress = `${state.currentJob.index + 1}/${state.totalBooks ?? '?'}`;
-        this.statusBarEl.setText(`Kindle: Syncing ${progress}`);
+        this.statusBarEl.setText(`Yandex Books: Syncing ${progress}`);
       } else if (statusMessage) {
         this.statusBarEl.setText(statusMessage);
       } else {
         this.statusBarEl.setText('');
       }
 
-      this.ribbonIconEl.toggleClass('kindle-ribbon-syncing', isSyncing);
+      this.ribbonIconEl.toggleClass('yandex-books-ribbon-syncing', isSyncing);
     });
 
     this.addCommand({
-      id: 'kindle-sync',
+      id: 'yandex-books-sync',
       name: 'Sync highlights',
       callback: () => {
         this.showSyncModal();
@@ -68,7 +68,7 @@ export default class KindlePlugin extends Plugin {
     });
 
     this.addCommand({
-      id: 'kindle-migrate-properties',
+      id: 'yandex-books-migrate-properties',
       name: 'Migrate properties to new format',
       callback: async () => {
         await this.migrateProperties();
@@ -84,30 +84,30 @@ export default class KindlePlugin extends Plugin {
   private registerEvents(): void {
     this.registerEvent(
       this.app.workspace.on('file-menu', (menu, file) => {
-        const kindleFile = this.fileManager.mapToKindleFile(file);
-        if (kindleFile == null) {
+        const syncedBookFile = this.fileManager.mapToSyncedBookFile(file);
+        if (syncedBookFile == null) {
           return;
         }
 
         menu.addItem((item) => {
           item
-            .setTitle('Kindle: Ignore this book')
+            .setTitle('Yandex Books: Ignore this book')
             .setIcon('eye-off')
             .onClick(() => {
-              const title = kindleFile.frontmatter.title;
+              const title = syncedBookFile.frontmatter.title;
               const current = get(settingsStore).ignoredBooks ?? [];
               settingsStore.actions.setIgnoredBooks([...current, title]);
-              console.log('Kindle: Ignored book:', title);
+              console.log('Yandex Books: Ignored book:', title);
               new Notice('Book ignored: will be skipped on future syncs');
             });
         });
 
         menu.addItem((item) => {
           item
-            .setTitle('Kindle: Ignore and delete this book')
+            .setTitle('Yandex Books: Ignore and delete this book')
             .setIcon('trash')
             .onClick(async () => {
-              const title = kindleFile.frontmatter.title;
+              const title = syncedBookFile.frontmatter.title;
               const modal = new ConfirmDeleteModal(this.app, title);
               const confirmed = await modal.confirm();
 
@@ -119,8 +119,8 @@ export default class KindlePlugin extends Plugin {
               const current = get(settingsStore).ignoredBooks ?? [];
               settingsStore.actions.setIgnoredBooks([...current, title]);
 
-              await this.app.vault.trash(kindleFile.file, false);
-              console.log('Kindle: Ignored and deleted book:', title, kindleFile.file.path);
+              await this.app.vault.trash(syncedBookFile.file, false);
+              console.log('Yandex Books: Ignored and deleted book:', title, syncedBookFile.file.path);
               new Notice('Book deleted and added to ignore list');
             });
         });
@@ -171,9 +171,9 @@ export default class KindlePlugin extends Plugin {
   public onunload(): void {
     this.storeUnsubscribe?.();
     syncCancellation.reset();
-    this.ribbonIconEl.removeClass('kindle-ribbon-syncing');
+    this.ribbonIconEl.removeClass('yandex-books-ribbon-syncing');
     this.statusBarEl.setText('');
     ee.removeAllListeners();
-    console.log('Kindle Highlights plugin: unloading plugin', new Date().toLocaleString());
+    console.log('Yandex Books Highlights plugin: unloading plugin', new Date().toLocaleString());
   }
 }

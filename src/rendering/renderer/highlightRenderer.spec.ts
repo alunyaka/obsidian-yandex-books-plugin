@@ -48,6 +48,7 @@ describe('HighlightRenderer', () => {
         ['{{createdDate}}', ''],
         ['{{title}}', 'Book title'],
         ['{{longTitle}}', 'Book title'],
+        ['{{url}}', ''],
       ])('template variable "%s" evaluated as "%s"', (template, expected) => {
         const renderer = new HighlightRenderer(template);
         expect(renderer.render(highlight, book)).toBe(expected);
@@ -75,26 +76,26 @@ describe('HighlightRenderer', () => {
       );
     });
 
-    it('appLink template variable is set when a book has an ASIN value', () => {
-      const myBook: Book = { ...book, asin: 'A1234' };
+    it('url template variable is set when a book has a Yandex Books URL', () => {
+      const myBook: Book = { ...book, url: 'https://books.yandex.ru/books/book-1' };
       const highlight: Highlight = {
         id: faker.datatype.uuid(),
         text: 'highlighted text',
       };
 
-      const renderer = new HighlightRenderer('{{text}} - {{appLink}}');
+      const renderer = new HighlightRenderer('{{text}} - {{url}}');
       expect(renderer.render(highlight, myBook)).toMatch(
-        new RegExp('^highlighted text - kindle://(.*) \\^ref-.*$')
+        new RegExp('^highlighted text - https://books.yandex.ru/books/book-1 \\^ref-.*$')
       );
     });
 
-    it('appLink template variable is undefined when a book is missing an ASIN value', () => {
+    it('url template variable is undefined when a book is missing a Yandex Books URL', () => {
       const highlight: Highlight = {
         id: faker.datatype.uuid(),
         text: 'highlighted text',
       };
 
-      const renderer = new HighlightRenderer('{{text}} - {{appLink}}');
+      const renderer = new HighlightRenderer('{{text}} - {{url}}');
 
       expect(renderer.render(highlight, book)).toMatch(
         // eslint-disable-next-line no-regex-spaces

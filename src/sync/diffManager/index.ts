@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import type FileManager from '~/fileManager';
 import type { Highlight } from '~/models';
-import type { Book, KindleFile } from '~/models';
+import type { Book, SyncedBookFile } from '~/models';
 import { getRenderers } from '~/rendering';
 import { HighlightIdBlockRefPrefix } from '~/rendering/renderer';
 import { sb, StringBuffer } from '~/utils';
@@ -24,17 +24,17 @@ export class DiffManager {
 
   public static async create(
     fileManager: FileManager,
-    kindleFile: KindleFile
+    syncedBookFile: SyncedBookFile
   ): Promise<DiffManager> {
-    const manager = new DiffManager(fileManager, kindleFile);
+    const manager = new DiffManager(fileManager, syncedBookFile);
     await manager.load();
     return manager;
   }
 
-  private constructor(private fileManager: FileManager, private kindleFile: KindleFile) {}
+  private constructor(private fileManager: FileManager, private syncedBookFile: SyncedBookFile) {}
 
   private async load(): Promise<void> {
-    const fileContents = await this.fileManager.readFile(this.kindleFile);
+    const fileContents = await this.fileManager.readFile(this.syncedBookFile);
     this.fileBuffer = sb(fileContents);
   }
 
@@ -69,12 +69,12 @@ export class DiffManager {
       .filter((d) => d.nextRenderedHighlight)
       .map((d) => ({
         line: d.nextRenderedHighlight?.line,
-        content: highlightRenderer.render(d.remoteHighlight, this.kindleFile.book),
+        content: highlightRenderer.render(d.remoteHighlight, this.syncedBookFile.book),
       }));
 
     const appendList = diffs
       .filter((d) => d.nextRenderedHighlight == null)
-      .map((d) => highlightRenderer.render(d.remoteHighlight, this.kindleFile.book));
+      .map((d) => highlightRenderer.render(d.remoteHighlight, this.syncedBookFile.book));
 
     const modifiedFileContents = this.fileBuffer
       .insertLinesAt(insertList)
@@ -82,7 +82,7 @@ export class DiffManager {
       .toString();
 
     await this.fileManager.updateFile(
-      this.kindleFile,
+      this.syncedBookFile,
       remoteBook,
       modifiedFileContents,
       remoteHighlights.length

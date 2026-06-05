@@ -1,4 +1,4 @@
-# Build, Release & Operations — obsidian-kindle-plugin
+# Build, Release & Operations — obsidian-yandex-books-plugin
 
 ## Build & Test
 
@@ -8,7 +8,7 @@
 | `npm run lint`         | ESLint         | 0 errors required. Warnings acceptable (32 as of v2.0.0) |
 | `npm run test`         | Jest tests     | All pass (112 tests, 12 suites as of v2.0.0)             |
 | `npm run test-verbose` | Jest verbose   | Same as above with detail                                |
-| `npm run build`        | Rollup → dist/ | Produces `dist/main.js` (~1MB) and `dist/manifest.json`  |
+| `npm run build`        | webpack → dist/ | Produces `dist/main.js` (~1MB) and `dist/manifest.json` |
 
 - **Pre-commit hooks**: lint-staged runs on staged files. Will reject commits with lint errors. Never bypass with `--no-verify`.
 - **Node version**: 20.x (local and CI). Older Node versions (15, 19) break with modern deps.
@@ -50,8 +50,8 @@ Then restart Obsidian (or toggle the plugin off/on in Settings → Community Plu
 To test release artifacts specifically:
 
 ```bash
-gh release download <version> --pattern 'main.js' --pattern 'manifest.json' --dir /tmp/kindle-release --clobber
-cp /tmp/kindle-release/* "$PLUGIN_DIR/"
+gh release download <version> --pattern 'main.js' --pattern 'manifest.json' --dir /tmp/yandex-books-release --clobber
+cp /tmp/yandex-books-release/* "$PLUGIN_DIR/"
 ```
 
 ## Git Conventions
@@ -70,14 +70,14 @@ cp /tmp/kindle-release/* "$PLUGIN_DIR/"
 
 ## GitHub Auth
 
-The repo owner's SSH key authenticates as `hadynz`. The `gh` CLI may be authenticated as a different account (`hosman-nz`).
+The repo owner's SSH key and the `gh` CLI account may differ.
 
-- **Git operations** (push, pull, fetch) use SSH → works as `hadynz`
-- **GitHub API** (`gh` CLI) uses OAuth token → may be `hosman-nz`
+- **Git operations** (push, pull, fetch) use SSH
+- **GitHub API** (`gh` CLI) uses its active OAuth token
 
 If `gh` API calls return 404/403:
 
 1. `gh auth status` — check active account
-2. `gh auth switch` — switch to `hadynz`
+2. `gh auth switch` — switch to the account that owns this repository
 
 **Always verify at session start** which account `gh` is using, especially before releases or PR operations.

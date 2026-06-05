@@ -25,6 +25,10 @@ export type YandexBooksDebugEvent = {
 
 type DebugLogger = (event: YandexBooksDebugEvent) => void;
 
+type YandexBooksClientOptions = {
+  debugQuoteLimit?: number;
+};
+
 type FetchResult = {
   ok: boolean;
   status: number;
@@ -44,7 +48,11 @@ export default class YandexBooksClient {
   private window: BrowserWindow | undefined;
   private ready: Promise<void> | undefined;
 
-  constructor(private oauthToken: string, private debug?: DebugLogger) {}
+  constructor(
+    private oauthToken: string,
+    private debug?: DebugLogger,
+    private options: YandexBooksClientOptions = {}
+  ) {}
 
   public async getProfile(): Promise<YandexProfile> {
     this.log('Loading profile');
@@ -97,11 +105,22 @@ export default class YandexBooksClient {
   private async getAllQuotes(userId: string): Promise<YandexQuote[]> {
     const quotes: YandexQuote[] = [];
     const seen = new Set<string>();
+    const quoteLimit = this.options.debugQuoteLimit;
 
     for (let pageNumber = 1; pageNumber <= MAX_QUOTES_PAGES; pageNumber++) {
-      this.log('Loading quotes page', { page: pageNumber, perPage: QUOTES_PAGE_LIMIT });
+      const remainingQuotes =
+        quoteLimit != null ? Math.max(0, quoteLimit - quotes.length) : QUOTES_PAGE_LIMIT;
+
+      if (remainingQuotes === 0) {
+        this.log('Stopped quotes pagination at debug limit', { limit: quoteLimit });
+        return quotes;
+      }
+
+      const perPage = Math.min(QUOTES_PAGE_LIMIT, remainingQuotes);
+
+      this.log('Loading quotes page', { page: pageNumber, perPage });
       const response = await this.getJson<YandexQuotesResponse>(
-        `/users/${encodeURIComponent(userId)}/quotes?page=${pageNumber}&per_page=${QUOTES_PAGE_LIMIT}`
+        `/users/${encodeURIComponent(userId)}/quotes?page=${pageNumber}&per_page=${perPage}`
       );
 
       const page = response.quotes ?? [];
@@ -122,6 +141,11 @@ export default class YandexBooksClient {
         newCount: newQuotes.length,
         total: quotes.length,
       });
+
+      if (quoteLimit != null && quotes.length >= quoteLimit) {
+        this.log('Stopped quotes pagination at debug limit', { limit: quoteLimit });
+        return quotes.slice(0, quoteLimit);
+      }
 
       if (page.length === 0 || newQuotes.length === 0) {
         return quotes;

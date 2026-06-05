@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 
 import { ee } from '~/eventEmitter';
-import type { Book, Highlight, KindleFile, SyncMode } from '~/models';
+import type { Book, Highlight, SyncedBookFile, SyncMode } from '~/models';
 import { shortenTitle } from '~/utils';
 
 type Job = {
@@ -150,7 +150,7 @@ const createSyncModalStore = () => {
     }));
   });
 
-  ee.on('resyncBook', (file: KindleFile) => {
+  ee.on('resyncBook', (file: SyncedBookFile) => {
     store.set({
       ...InitialState,
       status: 'sync:syncing',
@@ -183,7 +183,7 @@ const createSyncModalStore = () => {
     }));
   });
 
-  ee.on('resyncFailure', (file: KindleFile, message: string) => {
+  ee.on('resyncFailure', (file: SyncedBookFile, message: string) => {
     store.update((state) => ({
       ...state,
       status: 'idle',

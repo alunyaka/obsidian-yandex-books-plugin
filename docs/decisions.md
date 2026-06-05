@@ -14,7 +14,7 @@ Tracking key decisions made and work explicitly deferred for future sessions.
 
 ### Properties Migration UX (Deferred)
 
-**Decision**: Migration remains a manual command (`Kindle: Migrate properties to new format`). No automatic prompt on startup.
+**Decision**: Migration remains a manual command (`Yandex Books: Migrate properties to new format`). No automatic prompt on startup.
 **Reason**: Owner wants to think about the right UX before committing to an approach.
 **Options to consider**:
 

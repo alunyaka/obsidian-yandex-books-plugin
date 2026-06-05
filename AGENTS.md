@@ -1,4 +1,4 @@
-# AGENTS.md — obsidian-kindle-plugin
+# AGENTS.md — obsidian-yandex-books-plugin
 
 Working conventions and decisions for AI-assisted development on this repo.
 
@@ -6,10 +6,10 @@ Working conventions and decisions for AI-assisted development on this repo.
 
 ## Project Overview
 
-- **What**: Obsidian plugin for syncing Kindle highlights/notes into an Obsidian vault
-- **Tech**: TypeScript, Rollup bundler, Obsidian Plugin API
-- **Stars**: 1,200+ | **Forks**: 86 | **Status**: Revived (Feb 2026 after ~3 year hiatus)
-- **Owner**: hadynz (GitHub SSH) — note: `gh` CLI may be authenticated as a different account
+- **What**: Obsidian plugin for syncing Yandex Books highlights/notes into an Obsidian vault
+- **Tech**: TypeScript, webpack bundler, Obsidian Plugin API
+- **Status**: Active Yandex Books adaptation
+- **Owner**: Andrey Lunyaka — note: `gh` CLI may be authenticated as a different account
 
 ## Quick Reference
 
@@ -24,7 +24,7 @@ Working conventions and decisions for AI-assisted development on this repo.
 
 | Document                                           | Contents                                                                                                      |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| [Architecture](docs/architecture.md)               | Key files, sync behavior, properties format, Amazon regions                                                   |
+| [Architecture](docs/architecture.md)               | Key files, sync behavior, properties format, Yandex Books integration                                         |
 | [Build & Release](docs/build-and-release.md)       | Build commands, versioning (3-file bump), release process, local testing, CI/CD, git conventions, GitHub auth |
 | [Decisions](docs/decisions.md)                     | Deferred work, excluded PRs, open design questions                                                            |
 | [Engineering Journal](docs/engineering-journal.md) | Session-by-session learnings, gotchas, and metrics                                                            |

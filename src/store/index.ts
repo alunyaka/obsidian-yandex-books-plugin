@@ -1,11 +1,11 @@
-import type KindlePlugin from '~/.';
+import type YandexBooksPlugin from '~/.';
 import type FileManager from '~/fileManager';
 
 import { fileStore } from './fileStore';
 import { settingsStore } from './settingsStore';
 
 const initializeStores = async (
-  plugin: KindlePlugin,
+  plugin: YandexBooksPlugin,
   fileManager: FileManager
 ): Promise<void> => {
   await settingsStore.initialize(plugin);

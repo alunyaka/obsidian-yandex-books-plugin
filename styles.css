@@ -1,17 +1,17 @@
-.kindle-ribbon-syncing {
-  animation: kindle-pulse 1.2s ease-in-out infinite;
+.yandex-books-ribbon-syncing {
+  animation: yandex-books-pulse 1.2s ease-in-out infinite;
   color: var(--interactive-accent);
   background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
   border-radius: 6px;
   box-shadow: 0 0 0 0 color-mix(in srgb, var(--interactive-accent) 35%, transparent);
 }
 
-.kindle-ribbon-syncing svg {
+.yandex-books-ribbon-syncing svg {
   color: inherit;
   fill: currentColor;
 }
 
-@keyframes kindle-pulse {
+@keyframes yandex-books-pulse {
   0%,
   100% {
     opacity: 1;

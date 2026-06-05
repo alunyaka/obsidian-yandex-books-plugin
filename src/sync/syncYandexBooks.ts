@@ -14,7 +14,9 @@ const errorMessage = (error: unknown): string => {
 
 export const syncYandexBooks = async (fileManager: FileManager): Promise<void> => {
   const mode = 'yandex-books';
-  const auth = get(settingsStore).yandexAuth;
+  const settings = get(settingsStore);
+  const auth = settings.yandexAuth;
+  const debugQuoteLimit = settings.debugQuoteLimit;
 
   if (!auth.isLoggedIn || auth.oauthToken == null) {
     ee.emit(
@@ -25,18 +27,22 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
   }
 
   const syncManager = new SyncManager(fileManager);
-  const client = new YandexBooksClient(auth.oauthToken, (event) => {
-    const details =
-      event.details != null
-        ? ` ${Object.entries(event.details)
-            .map(([key, value]) => `${key}=${value ?? 'unknown'}`)
-            .join(' ')}`
-        : '';
-    const message = `${event.message}${details}`;
+  const client = new YandexBooksClient(
+    auth.oauthToken,
+    (event) => {
+      const details =
+        event.details != null
+          ? ` ${Object.entries(event.details)
+              .map(([key, value]) => `${key}=${value ?? 'unknown'}`)
+              .join(' ')}`
+          : '';
+      const message = `${event.message}${details}`;
 
-    console.debug(`Yandex Books: ${message}`);
-    ee.emit('syncLog', message);
-  });
+      console.debug(`Yandex Books: ${message}`);
+      ee.emit('syncLog', message);
+    },
+    { debugQuoteLimit }
+  );
 
   syncCancellation.start(mode);
   ee.emit('syncSessionStart', mode);
@@ -44,6 +50,9 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
   try {
     ee.emit('fetchingBooks');
     ee.emit('syncLog', 'Loading Yandex Books quotes');
+    if (debugQuoteLimit != null) {
+      ee.emit('syncLog', `Debug quote limit enabled: ${debugQuoteLimit}`);
+    }
 
     const bookHighlights = await client.getBookHighlights();
     ee.emit(

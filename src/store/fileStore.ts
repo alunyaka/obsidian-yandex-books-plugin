@@ -37,7 +37,7 @@ const createFileStore = () => {
           return;
         }
 
-        const files = _fileManager.getKindleFiles();
+        const files = _fileManager.getSyncedBookFiles();
         const books: BookCoverInfo[] = files
           .filter((f) => f.frontmatter?.bookImageUrl)
           .map((f) => ({

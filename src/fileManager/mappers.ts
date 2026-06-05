@@ -2,7 +2,7 @@ import moment from 'moment';
 import path from 'path';
 import { get } from 'svelte/store';
 
-import type { Book, BookMetadata, KindleFrontmatter } from '~/models';
+import type { Book, BookMetadata, YandexBooksFrontmatter } from '~/models';
 import { getRenderers } from '~/rendering';
 import { settingsStore } from '~/store';
 
@@ -15,12 +15,12 @@ export const bookFilePath = (book: Book, metadata: BookMetadata): string => {
   return path.join(get(settingsStore).highlightsFolder, fileName);
 };
 
-export const bookToFrontMatter = (book: Book, highlightsCount: number): KindleFrontmatter => {
+export const bookToFrontMatter = (book: Book, highlightsCount: number): YandexBooksFrontmatter => {
   return {
     bookId: book.id,
     title: book.title,
     author: book.author,
-    asin: book.asin,
+    bookUrl: book.url,
     lastAnnotatedDate: book.lastAnnotatedDate
       ? moment(book.lastAnnotatedDate).format('YYYY-MM-DD')
       : null,
@@ -29,13 +29,13 @@ export const bookToFrontMatter = (book: Book, highlightsCount: number): KindleFr
   };
 };
 
-export const frontMatterToBook = (frontmatter: KindleFrontmatter): Book => {
+export const frontMatterToBook = (frontmatter: YandexBooksFrontmatter): Book => {
   const formats = ['MMM DD, YYYY', 'YYYY-MM-DD'];
   return {
     id: frontmatter.bookId,
     title: frontmatter.title,
     author: frontmatter.author,
-    asin: frontmatter.asin,
+    url: frontmatter.bookUrl,
     lastAnnotatedDate: frontmatter.lastAnnotatedDate
       ? moment(frontmatter.lastAnnotatedDate, formats).toDate()
       : null,

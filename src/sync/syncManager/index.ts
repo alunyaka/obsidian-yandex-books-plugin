@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 
 import type FileManager from '~/fileManager';
-import type { Book, BookMetadata, Highlight, KindleFile } from '~/models';
+import type { Book, BookMetadata, Highlight, SyncedBookFile } from '~/models';
 import { getRenderers } from '~/rendering';
 import { settingsStore } from '~/store';
 
@@ -18,7 +18,7 @@ export default class SyncManager {
   public filterBooksToSync(remoteBooks: Book[]): Book[] {
     const lastSyncDate = get(settingsStore).lastSyncDate;
     const ignoredBooks = get(settingsStore).ignoredBooks ?? [];
-    const vaultBooks = this.fileManager.getKindleFiles();
+    const vaultBooks = this.fileManager.getSyncedBookFiles();
 
     const booksToSync = diffBooks(
       remoteBooks,
@@ -42,7 +42,7 @@ export default class SyncManager {
       return; // No highlights for book. Skip sync
     }
 
-    const file = this.fileManager.getKindleFile(book);
+    const file = this.fileManager.getSyncedBookFile(book);
 
     if (file == null) {
       await this.createBook(book, highlights);
@@ -52,7 +52,7 @@ export default class SyncManager {
   }
 
   public async resyncBook(
-    file: KindleFile,
+    file: SyncedBookFile,
     remoteBook: Book,
     remoteHighlights: Highlight[]
   ): Promise<DiffResult[]> {

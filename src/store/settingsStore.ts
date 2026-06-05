@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-import type KindlePlugin from '~/.';
+import type YandexBooksPlugin from '~/.';
 import type { YandexAuthInfo } from '~/auth';
 import { ee } from '~/eventEmitter';
 import type { SyncMode } from '~/models';
@@ -15,6 +15,7 @@ type Settings = {
   fileNameTemplate?: string;
   yandexAuth: YandexAuthInfo;
   ignoredBooks: string[];
+  debugQuoteLimit?: number;
 
   // Deprecated - delete eventually
   noteTemplate?: string;
@@ -34,10 +35,10 @@ const DEFAULT_SETTINGS: Settings = {
 const createSettingsStore = () => {
   const store = writable(DEFAULT_SETTINGS);
 
-  let _plugin!: KindlePlugin;
+  let _plugin!: YandexBooksPlugin;
 
   // Load settings data from disk into store
-  const initialize = async (plugin: KindlePlugin): Promise<void> => {
+  const initialize = async (plugin: YandexBooksPlugin): Promise<void> => {
     const data = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData()) as Settings;
 
     const settings: Settings = {
@@ -123,6 +124,13 @@ const createSettingsStore = () => {
     });
   };
 
+  const setDebugQuoteLimit = (value: number | undefined) => {
+    store.update((state) => {
+      state.debugQuoteLimit = value;
+      return state;
+    });
+  };
+
   return {
     store,
     subscribe: store.subscribe,
@@ -134,6 +142,7 @@ const createSettingsStore = () => {
       setHighlightTemplate,
       setYandexAuth,
       setIgnoredBooks,
+      setDebugQuoteLimit,
     },
   };
 };

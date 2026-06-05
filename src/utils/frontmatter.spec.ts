@@ -98,7 +98,7 @@ bookName: New Book
   it('Frontmatter with undefined values does not throw exception', () => {
     expect(() => {
       mergeFrontmatter('', {
-        'kindle-sync': {
+        'yandex-books-sync': {
           lastAnnotatedDate: undefined,
         },
       });

@@ -1,25 +1,18 @@
 # Obsidian Yandex Books Plugin
 
-Fork of `hadynz/obsidian-kindle-plugin` being reworked to sync highlights and notes from Yandex Books into an Obsidian vault.
+Obsidian plugin for syncing highlights and notes from Yandex Books into an Obsidian vault.
 
 ## Current Status
 
-The original import paths have been removed:
+The plugin currently supports:
 
-- Cloud login/scraping from the previous upstream service
-- Local device-export parsing
-- Region-specific account settings and login/logout session handling
-- External metadata scraping tied to the old provider
-
-The remaining core keeps the useful Obsidian plugin foundation:
-
+- Yandex Books OAuth/session setup
+- Yandex Books highlight sync
 - Highlight note rendering
 - Template editing and preview
 - Vault file/frontmatter management
 - Book ignore list
 - Diff-based updates for already-synced notes
-
-The next implementation step is adding a Yandex Books source adapter that produces the existing `Book` and `Highlight` models for `SyncManager`.
 
 ## Development
 

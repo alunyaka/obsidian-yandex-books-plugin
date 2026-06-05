@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import type TypedEmitter from 'typed-emitter';
 
-import type { Book, Highlight, KindleFile, SyncMode } from '~/models';
+import type { Book, Highlight, SyncedBookFile, SyncMode } from '~/models';
 
 interface MessageEvents {
   obsidianReady: () => void;
@@ -13,9 +13,9 @@ interface MessageEvents {
   syncBook: (book: Book, index: number) => void;
   syncBookSuccess: (book: Book, highlights: Highlight[]) => void;
   syncBookFailure: (book: Book, message: string) => void;
-  resyncBook: (file: KindleFile) => void;
-  resyncComplete: (file: KindleFile, diffCount: number) => void;
-  resyncFailure: (file: KindleFile, message: string) => void;
+  resyncBook: (file: SyncedBookFile) => void;
+  resyncComplete: (file: SyncedBookFile, diffCount: number) => void;
+  resyncFailure: (file: SyncedBookFile, message: string) => void;
   syncCancelRequested: () => void;
   syncCancelled: (summary: { syncedCount: number; totalCount: number }) => void;
   syncLog: (message: string) => void;

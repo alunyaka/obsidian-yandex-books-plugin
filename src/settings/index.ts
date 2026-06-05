@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import { get } from 'svelte/store';
 
-import type KindlePlugin from '~/.';
+import type YandexBooksPlugin from '~/.';
 import { clearYandexSession, readYandexAuthInfo, YandexLoginModal } from '~/auth';
 import type FileManager from '~/fileManager';
 import { settingsStore } from '~/store';
@@ -14,7 +14,7 @@ type AdapterFile = {
 };
 
 export class SettingsTab extends PluginSettingTab {
-  constructor(app: App, plugin: KindlePlugin, private fileManager: FileManager) {
+  constructor(app: App, plugin: YandexBooksPlugin, private fileManager: FileManager) {
     super(app, plugin);
     this.app = app;
   }
@@ -26,9 +26,9 @@ export class SettingsTab extends PluginSettingTab {
 
     this.templatesEditor();
     this.yandexAccount();
+    this.debugQuoteLimit();
     this.highlightsFolder();
     this.ignoredBooks();
-    this.sponsorMe();
   }
 
   private templatesEditor(): void {
@@ -119,6 +119,35 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
+  private debugQuoteLimit(): void {
+    const value = get(settingsStore).debugQuoteLimit;
+
+    new Setting(this.containerEl)
+      .setName('Debug quote limit')
+      .setDesc(
+        'Optional safety limit for testing. When set, sync stops loading Yandex Books quotes after this many quotes. Leave empty or set 0 to disable.'
+      )
+      .addText((text) => {
+        text
+          .setPlaceholder('No limit')
+          .setValue(value != null ? String(value) : '')
+          .onChange((rawValue) => {
+            const trimmed = rawValue.trim();
+            const parsed = Number(trimmed);
+            const limit =
+              trimmed === '' || parsed === 0 || !Number.isFinite(parsed)
+                ? undefined
+                : Math.max(1, Math.floor(parsed));
+
+            settingsStore.actions.setDebugQuoteLimit(limit);
+          });
+
+        text.inputEl.type = 'number';
+        text.inputEl.min = '0';
+        text.inputEl.step = '1';
+      });
+  }
+
   private highlightsFolder(): void {
     new Setting(this.containerEl)
       .setName('Highlights folder location')
@@ -163,14 +192,4 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  private sponsorMe(): void {
-    new Setting(this.containerEl)
-      .setName('Sponsor')
-      .setDesc(
-        'Has this plugin enhanced your workflow? Say thanks as a one-time payment and buy me a coffee'
-      )
-      .addButton((bt) => {
-        bt.buttonEl.outerHTML = `<a href="https://www.buymeacoffee.com/hadynz"><img style="height: 35px;" src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=hadynz&button_colour=BD5FFF&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00"></a>`;
-      });
-  }
 }

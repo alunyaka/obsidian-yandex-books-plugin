@@ -4,7 +4,6 @@ export type Book = {
   id: string;
   title: string;
   author: string;
-  asin?: string;
   url?: string;
   imageUrl?: string;
   lastAnnotatedDate?: Date;
@@ -36,18 +35,18 @@ export type BookMetadata = {
 
 export type SyncMode = 'yandex-books';
 
-export type KindleFrontmatter = {
+export type YandexBooksFrontmatter = {
   bookId: string;
   title: string;
   author: string;
-  asin: string;
+  bookUrl?: string;
   lastAnnotatedDate?: string; // Not set for My Clipping annotations
-  bookImageUrl: string;
+  bookImageUrl?: string;
   highlightsCount: number;
 };
 
-export type KindleFile = {
+export type SyncedBookFile = {
   file: TFile;
-  frontmatter: KindleFrontmatter;
+  frontmatter: YandexBooksFrontmatter;
   book?: Book;
 };

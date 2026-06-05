@@ -3,8 +3,6 @@ import moment from 'moment';
 import type { Book, BookHighlight, BookMetadata, Highlight } from '~/models';
 import { parseAuthors, shortenTitle } from '~/utils';
 
-import { generateAppLink } from './utils';
-
 export type AuthorsTemplateVariables = {
   author: string;
   authorsLastNames: string;
@@ -26,11 +24,10 @@ type FileNameTemplateVariables = CommonTemplateVariables & {
 };
 
 type FileTemplateVariables = CommonTemplateVariables & {
-  asin?: string;
+  bookId: string;
   url?: string;
   imageUrl?: string;
   lastAnnotatedDate?: string;
-  appLink?: string;
   isbn?: string;
   pages: string;
   publicationDate: string;
@@ -43,12 +40,12 @@ type FileTemplateVariables = CommonTemplateVariables & {
 type HighlightTemplateVariables = CommonTemplateVariables & {
   id: string;
   text: string;
+  url?: string;
   location?: string;
   page?: string;
   note?: string;
   color?: 'pink' | 'blue' | 'yellow' | 'orange';
   createdDate?: Date;
-  appLink?: string;
 };
 
 export const authorsTemplateVariables = (author: string): AuthorsTemplateVariables => {
@@ -99,7 +96,7 @@ export const highlightTemplateVariables = (
   return {
     ...highlight,
     ...commonTemplateVariables(book),
-    appLink: generateAppLink(book.asin, highlight),
+    url: book.url,
   };
 };
 
@@ -111,13 +108,12 @@ export const fileTemplateVariables = (
 
   return {
     ...commonTemplateVariables(book),
-    asin: book.asin,
+    bookId: book.id,
     url: book.url,
     imageUrl: book.imageUrl,
     lastAnnotatedDate: book.lastAnnotatedDate
       ? moment(book.lastAnnotatedDate).format('YYYY-MM-DD').toString()
       : undefined,
-    appLink: generateAppLink(book.asin),
     isbn: metadata?.isbn,
     pages: metadata?.pages,
     publicationDate: metadata?.publicationDate,

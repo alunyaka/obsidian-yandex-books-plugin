@@ -19,7 +19,6 @@ describe('FileRenderer', () => {
           id: faker.random.alphaNumeric(4),
           title: 'My book title: extended description',
           author: faker.name.findName(),
-          asin: faker.random.alphaNumeric(4),
           url: faker.internet.url(),
           imageUrl: faker.image.imageUrl(),
           lastAnnotatedDate: new Date(2022, 3, 4),
@@ -43,7 +42,7 @@ describe('FileRenderer', () => {
         ['{{id}}', ''],
         ['{{title}}', 'My book title'],
         ['{{longTitle}}', 'My book title: extended description'],
-        ['{{asin}}', bookHighlight.book.asin],
+        ['{{bookId}}', bookHighlight.book.id],
         ['{{url}}', bookHighlight.book.url],
         ['{{imageUrl}}', bookHighlight.book.imageUrl],
         ['{{lastAnnotatedDate}}', '2022-04-04'],
@@ -76,7 +75,7 @@ describe('FileRenderer', () => {
       };
 
       it.each([
-        ['{{asin}}', ''],
+        ['{{bookId}}', bookHighlight.book.id],
         ['{{url}}', ''],
         ['{{imageUrl}}', ''],
         ['{{lastAnnotatedDate}}', ''],

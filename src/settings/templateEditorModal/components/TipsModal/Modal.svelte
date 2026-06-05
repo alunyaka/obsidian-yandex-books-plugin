@@ -23,12 +23,12 @@
       <tbody>
         <CommonVariables />
         <tr>
-          <td><Chip title={'asin'} /></td>
-          <td>Book ASIN</td>
+          <td><Chip title={'bookId'} /></td>
+          <td>Yandex Books book ID</td>
         </tr>
         <tr>
           <td><Chip title={'url'} /></td>
-          <td>Book URL</td>
+          <td>Yandex Books book URL</td>
         </tr>
         <tr>
           <td><Chip title={'imageUrl'} /></td>
@@ -37,10 +37,6 @@
         <tr>
           <td><Chip title={'lastAnnotatedDate'} /></td>
           <td>Date of last book highlight</td>
-        </tr>
-        <tr>
-          <td><Chip title={'appLink'} /></td>
-          <td>Link to book in Kindle app</td>
         </tr>
         <tr>
           <td><Chip title={'isbn'} /></td>
@@ -82,7 +78,7 @@
         </tr>
         <tr>
           <td><Chip title={'location'} /></td>
-          <td>Location</td>
+          <td>Reading progress</td>
         </tr>
         <tr>
           <td><Chip title={'page'} /></td>
@@ -109,8 +105,8 @@
           </td>
         </tr>
         <tr>
-          <td><Chip title={'appLink'} /></td>
-          <td>Link to highlighted text in Kindle app</td>
+          <td><Chip title={'url'} /></td>
+          <td>Yandex Books book URL</td>
         </tr>
       </tbody>
     </table>
