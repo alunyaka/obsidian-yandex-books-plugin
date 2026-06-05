@@ -46,17 +46,17 @@ export default class YandexBooksClient {
   public async getBookHighlights(): Promise<BookHighlight[]> {
     const authInfo = await readYandexAuthInfo();
     const profile = await this.getProfile();
-    const userId = profile.user?.uuid ?? profile.user?.id ?? authInfo.uid;
+    const userIds = this.getProfileIdentifiers(profile, authInfo.uid);
 
-    if (userId == null || userId === '') {
+    if (userIds.length === 0) {
       throw new YandexBooksApiError('Could not determine Yandex Books user id');
     }
 
     this.log('Resolved profile', {
-      userIdSource: profile.user?.uuid != null ? 'profile.uuid' : 'profile.id/cookie',
+      identifiers: userIds.map((candidate) => candidate.source).join(','),
     });
 
-    const quotes = await this.getAllQuotes(String(userId));
+    const quotes = await this.getAllQuotesWithFallback(userIds);
     this.log('Mapping quotes to books', { quotes: quotes.length });
     return mapQuotesToBookHighlights(quotes);
   }
@@ -88,6 +88,31 @@ export default class YandexBooksClient {
     }
   }
 
+  private async getAllQuotesWithFallback(
+    userIds: Array<{ source: string; value: string }>
+  ): Promise<YandexQuote[]> {
+    let lastError: unknown;
+
+    for (const userId of userIds) {
+      this.log('Trying quotes identifier', { source: userId.source });
+
+      try {
+        return await this.getAllQuotes(userId.value);
+      } catch (error) {
+        lastError = error;
+
+        if (error instanceof YandexBooksApiError && error.status === 404) {
+          this.log('Quotes identifier did not resolve', { source: userId.source });
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw lastError;
+  }
+
   private async getJson<T>(path: string): Promise<T> {
     const url = path.startsWith('http') ? path : `${REST_BASE_URL}${path}`;
     const label = this.requestLabel(url);
@@ -100,6 +125,10 @@ export default class YandexBooksClient {
     });
 
     if (!result.ok) {
+      this.log('API error body', {
+        path: label,
+        body: this.truncateForLog(result.text),
+      });
       throw new YandexBooksApiError(
         `Yandex Books API request failed: ${result.status} ${result.statusText}`,
         result.status
@@ -121,7 +150,13 @@ export default class YandexBooksClient {
         credentials: 'include',
         headers: {
           Accept: 'application/json',
-          Authorization: ${JSON.stringify(`OAuth ${this.oauthToken}`)},
+          'App-Language': 'ru',
+          'App-Locale': 'ru',
+          'App-Platform': 'android',
+          'Auth-Token': ${JSON.stringify(this.oauthToken)},
+          'Bookmate-Version': '20200305',
+          'Content-Type': 'application/json',
+          'Device-Os': 'Android',
           'X-Requested-With': 'XMLHttpRequest'
         }
       }).then(async (response) => ({
@@ -179,6 +214,33 @@ export default class YandexBooksClient {
     this.debug?.({ message, details });
   }
 
+  private getProfileIdentifiers(
+    profile: YandexProfile,
+    cookieUid?: string
+  ): Array<{ source: string; value: string }> {
+    const candidates = [
+      { source: 'profile.uuid', value: profile.user?.uuid },
+      { source: 'profile.login', value: profile.user?.login },
+      { source: 'profile.id', value: profile.user?.id },
+      { source: 'cookie.uid', value: cookieUid },
+    ];
+    const seen = new Set<string>();
+
+    return candidates.flatMap((candidate) => {
+      if (candidate.value == null || candidate.value === '') {
+        return [];
+      }
+
+      const value = String(candidate.value);
+      if (seen.has(value)) {
+        return [];
+      }
+
+      seen.add(value);
+      return [{ source: candidate.source, value }];
+    });
+  }
+
   private requestLabel(url: string): string {
     try {
       const parsed = new URL(url);
@@ -186,5 +248,10 @@ export default class YandexBooksClient {
     } catch {
       return url;
     }
+  }
+
+  private truncateForLog(value: string, maxLength = 240): string {
+    const normalized = value.replace(/\s+/g, ' ').trim();
+    return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}...` : normalized;
   }
 }

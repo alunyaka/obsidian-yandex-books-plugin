@@ -74,4 +74,21 @@ describe('mapQuotesToBookHighlights', () => {
 
     expect(result).toEqual([]);
   });
+
+  it('handles single-object author fields from the API', () => {
+    const [entry] = mapQuotesToBookHighlights([
+      {
+        uuid: 'quote-1',
+        content: 'Quote',
+        item_uuid: 'book-1',
+        book: {
+          uuid: 'book-1',
+          title: 'Book',
+          authors_objects: { name: 'Single Author' },
+        },
+      },
+    ]);
+
+    expect(entry.book.author).toBe('Single Author');
+  });
 });

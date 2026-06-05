@@ -15,7 +15,7 @@
   {#if !hasSyncedBefore && !hasAnyData}
     <div class="kp-stats--empty">
       <div class="kp-stats--empty-subtitle">
-        Choose a sync method below to import your Kindle highlights.
+        Choose a sync method below to import your Yandex Books highlights.
       </div>
     </div>
   {:else}

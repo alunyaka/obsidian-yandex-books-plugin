@@ -10,8 +10,8 @@ export type YandexPerson = {
 };
 
 export type YandexBook = {
-  authors?: YandexPerson[];
-  authors_objects?: YandexPerson[];
+  authors?: YandexPerson[] | YandexPerson;
+  authors_objects?: YandexPerson[] | YandexPerson;
   cover?: YandexImage;
   name?: string;
   title?: string;

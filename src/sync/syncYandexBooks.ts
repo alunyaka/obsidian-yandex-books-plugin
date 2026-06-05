@@ -8,6 +8,10 @@ import { YandexBooksClient } from '~/yandexBooks';
 import { syncCancellation } from './syncCancellation';
 import SyncManager from './syncManager';
 
+const errorMessage = (error: unknown): string => {
+  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+};
+
 export const syncYandexBooks = async (fileManager: FileManager): Promise<void> => {
   const mode = 'yandex-books';
   const auth = get(settingsStore).yandexAuth;
@@ -69,7 +73,8 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
         syncCancellation.incrementSynced();
         ee.emit('syncBookSuccess', book, highlights);
       } catch (error) {
-        ee.emit('syncBookFailure', book, String(error));
+        console.error('Yandex Books: Error syncing book', book, error);
+        ee.emit('syncBookFailure', book, errorMessage(error));
       }
     }
 
@@ -77,7 +82,8 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
       ee.emit('syncSessionSuccess');
     }
   } catch (error) {
-    ee.emit('syncSessionFailure', String(error));
+    console.error('Yandex Books: Sync failed', error);
+    ee.emit('syncSessionFailure', errorMessage(error));
   } finally {
     client.destroy();
     syncCancellation.complete();

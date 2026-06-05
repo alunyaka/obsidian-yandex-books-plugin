@@ -19,6 +19,14 @@ const compact = (values: Array<string | undefined>): string[] => {
   return values.filter((value): value is string => value != null && value.trim() !== '');
 };
 
+const asArray = <T>(value: T[] | T | undefined): T[] => {
+  if (value == null) {
+    return [];
+  }
+
+  return Array.isArray(value) ? value : [value];
+};
+
 const timestampToDate = (value: YandexQuote['created_at']): Date | undefined => {
   if (value == null) {
     return undefined;
@@ -39,8 +47,8 @@ const getCoverUrl = (book: YandexBook): string | undefined => {
 const mapBook = (book: YandexBook, quotes: YandexQuote[]): Book => {
   const id = book.uuid ?? quotes.find((quote) => quote.item_uuid)?.item_uuid ?? '';
   const author = compact([
-    ...(book.authors_objects ?? []).map((person) => person.name),
-    ...(book.authors ?? []).map((person) => person.name),
+    ...asArray(book.authors_objects).map((person) => person.name),
+    ...asArray(book.authors).map((person) => person.name),
   ]).join(', ');
   const dates = quotes
     .map((quote) => timestampToDate(quote.created_at))
