@@ -18,7 +18,18 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
   }
 
   const syncManager = new SyncManager(fileManager);
-  const client = new YandexBooksClient();
+  const client = new YandexBooksClient((event) => {
+    const details =
+      event.details != null
+        ? ` ${Object.entries(event.details)
+            .map(([key, value]) => `${key}=${value ?? 'unknown'}`)
+            .join(' ')}`
+        : '';
+    const message = `${event.message}${details}`;
+
+    console.debug(`Yandex Books: ${message}`);
+    ee.emit('syncLog', message);
+  });
 
   syncCancellation.start(mode);
   ee.emit('syncSessionStart', mode);
@@ -28,6 +39,10 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
     ee.emit('syncLog', 'Loading Yandex Books quotes');
 
     const bookHighlights = await client.getBookHighlights();
+    ee.emit(
+      'syncLog',
+      `Loaded ${bookHighlights.length} book${bookHighlights.length === 1 ? '' : 's'} with quotes`
+    );
     const remoteBooks = bookHighlights.map((entry) => entry.book);
     const booksToSync = syncManager.filterBooksToSync(remoteBooks);
     const highlightsByBookId = new Map(

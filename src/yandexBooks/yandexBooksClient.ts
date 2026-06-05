@@ -13,6 +13,13 @@ import type { YandexProfile, YandexQuote, YandexQuotesResponse } from './types';
 const REST_BASE_URL = 'https://api.bookmate.yandex.net/api/v5';
 const PAGE_LIMIT = 100;
 
+export type YandexBooksDebugEvent = {
+  message: string;
+  details?: Record<string, number | string | undefined>;
+};
+
+type DebugLogger = (event: YandexBooksDebugEvent) => void;
+
 type FetchResult = {
   ok: boolean;
   status: number;
@@ -32,7 +39,10 @@ export default class YandexBooksClient {
   private window: BrowserWindow | undefined;
   private ready: Promise<void> | undefined;
 
+  constructor(private debug?: DebugLogger) {}
+
   public async getProfile(): Promise<YandexProfile> {
+    this.log('Loading profile');
     return this.getJson<YandexProfile>('/profile');
   }
 
@@ -45,7 +55,12 @@ export default class YandexBooksClient {
       throw new YandexBooksApiError('Could not determine Yandex Books user id');
     }
 
+    this.log('Resolved profile', {
+      userIdSource: profile.user?.uuid != null ? 'profile.uuid' : 'profile.id/cookie',
+    });
+
     const quotes = await this.getAllQuotes(String(userId));
+    this.log('Mapping quotes to books', { quotes: quotes.length });
     return mapQuotesToBookHighlights(quotes);
   }
 
@@ -60,11 +75,13 @@ export default class YandexBooksClient {
     let offset = 0;
 
     while (true) {
+      this.log('Loading quotes page', { limit: PAGE_LIMIT, offset });
       const response = await this.getJson<YandexQuotesResponse>(
         `/users/${encodeURIComponent(userId)}/quotes?limit=${PAGE_LIMIT}&offset=${offset}`
       );
       const page = response.quotes ?? [];
       quotes.push(...page);
+      this.log('Loaded quotes page', { count: page.length, total: quotes.length });
 
       if (page.length < PAGE_LIMIT) {
         return quotes;
@@ -76,7 +93,14 @@ export default class YandexBooksClient {
 
   private async getJson<T>(path: string): Promise<T> {
     const url = path.startsWith('http') ? path : `${REST_BASE_URL}${path}`;
+    const label = this.requestLabel(url);
     const result = await this.fetchFromYandexSession(url);
+
+    this.log('API response', {
+      path: label,
+      status: result.status,
+      bytes: result.text.length,
+    });
 
     if (!result.ok) {
       throw new YandexBooksApiError(
@@ -118,6 +142,8 @@ export default class YandexBooksClient {
       return this.ready;
     }
 
+    this.log('Initializing Yandex Books browser session');
+
     this.window = new remote.BrowserWindow({
       width: 960,
       height: 700,
@@ -139,5 +165,18 @@ export default class YandexBooksClient {
     });
 
     return this.ready;
+  }
+
+  private log(message: string, details?: YandexBooksDebugEvent['details']): void {
+    this.debug?.({ message, details });
+  }
+
+  private requestLabel(url: string): string {
+    try {
+      const parsed = new URL(url);
+      return `${parsed.pathname}${parsed.search}`;
+    } catch {
+      return url;
+    }
   }
 }
