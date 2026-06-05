@@ -10,12 +10,11 @@ import FileManager from '~/fileManager';
 import { registerNotifications } from '~/notifications';
 import { SettingsTab } from '~/settings';
 import { initializeStores, settingsStore } from '~/store';
-import { SyncAmazon, syncCancellation, SyncClippings, SyncManager } from '~/sync';
+import { syncCancellation } from '~/sync';
 
 addIcon('kindle', kindleIcon);
 
 const SYNC_STATUS_MESSAGES: Record<string, string> = {
-  'sync:login': 'Kindle: Connecting…',
   'sync:fetching-books': 'Kindle: Loading library…',
   'sync:syncing': 'Kindle: Syncing…',
   'sync:cancelling': 'Kindle: Cancelling…',
@@ -23,8 +22,6 @@ const SYNC_STATUS_MESSAGES: Record<string, string> = {
 
 export default class KindlePlugin extends Plugin {
   private fileManager!: FileManager;
-  private syncAmazon!: SyncAmazon;
-  private syncClippings!: SyncClippings;
   private ribbonIconEl!: HTMLElement;
   private statusBarEl!: HTMLElement;
   private storeUnsubscribe: (() => void) | undefined;
@@ -33,12 +30,8 @@ export default class KindlePlugin extends Plugin {
     console.log('Kindle Highlights plugin: loading plugin', new Date().toLocaleString());
 
     this.fileManager = new FileManager(this.app.vault, this.app.metadataCache);
-    const syncManager = new SyncManager(this.fileManager);
 
     await initializeStores(this, this.fileManager);
-
-    this.syncAmazon = new SyncAmazon(syncManager);
-    this.syncClippings = new SyncClippings(syncManager);
 
     this.ribbonIconEl = this.addRibbonIcon('kindle', 'Sync your Kindle highlights', () => {
       this.showSyncModal();
@@ -86,22 +79,6 @@ export default class KindlePlugin extends Plugin {
 
     registerNotifications();
     this.registerEvents();
-
-    // Check for sync on boot asynchronously to prevent blocking
-    // Use setTimeout to defer this check until after initialization completes
-    setTimeout(() => {
-      try {
-        if (get(settingsStore).syncOnBoot) {
-          // Don't await - let it run in background
-          this.startAmazonSync().catch((error) => {
-            console.error('Error during sync on boot:', error);
-          });
-        }
-      } catch (error) {
-        // Silently fail if settings store isn't ready yet
-        console.warn('Settings store not ready for sync on boot check:', error);
-      }
-    }, 100);
   }
 
   private registerEvents(): void {
@@ -111,16 +88,6 @@ export default class KindlePlugin extends Plugin {
         if (kindleFile == null) {
           return;
         }
-
-        menu.addItem((item) => {
-          item
-            .setTitle('Kindle: Resync highlights')
-            .setIcon('kindle')
-            .setDisabled(kindleFile.book.asin == null)
-            .onClick(async () => {
-              await this.syncAmazon.resync(kindleFile);
-            });
-        });
 
         menu.addItem((item) => {
           item
@@ -166,14 +133,7 @@ export default class KindlePlugin extends Plugin {
   }
 
   private showSyncModal(): void {
-    new SyncModal(this.app, {
-      onOnlineSync: () => this.startAmazonSync(),
-      onMyClippingsSync: () => this.syncClippings.startSync(),
-    }).show();
-  }
-
-  private async startAmazonSync(): Promise<void> {
-    await this.syncAmazon.startSync();
+    new SyncModal(this.app).show();
   }
 
   private async migrateProperties(): Promise<void> {

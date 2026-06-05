@@ -31,7 +31,6 @@ const ellipsize = (value: string, maxLength = 64): string => {
 export type SyncModalState = {
   status:
     | 'idle'
-    | 'sync:login'
     | 'sync:fetching-books'
     | 'sync:syncing'
     | 'sync:cancelling'
@@ -112,15 +111,6 @@ const createSyncModalStore = () => {
   const syncing = (status: SyncModalState['status']) => {
     store.update((state) => ({ ...state, status }));
   };
-
-  ee.on('startLogin', () => {
-    syncing('sync:login');
-    addRootLog('Logging in…');
-  });
-
-  ee.on('loginComplete', (success: boolean) => {
-    addRootLog(success ? 'Login successful' : 'Login cancelled');
-  });
 
   ee.on('fetchingBooks', () => {
     syncing('sync:fetching-books');

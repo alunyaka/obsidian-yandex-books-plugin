@@ -5,7 +5,7 @@ export class SyncCancellation {
   private _cancelled = false;
   private _syncedCount = 0;
   private _totalCount = 0;
-  private _mode: SyncMode = 'amazon';
+  private _mode: SyncMode = 'yandex-books';
   private _active = false;
 
   get isCancelled(): boolean {

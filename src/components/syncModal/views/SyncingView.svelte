@@ -3,7 +3,6 @@
   import { Jumper } from 'svelte-loading-spinners';
 
   import { shortenTitle } from '~/utils';
-  import { currentAmazonRegion } from '~/amazonRegion';
   import { syncCancellation } from '~/sync/syncCancellation';
   import { store } from '../store';
 
@@ -54,11 +53,6 @@
       spans.push({ start: m.index, end: m.index + m[0].length });
     }
 
-    const amazonHost = /\bamazon\.[a-z.]+\b/g;
-    for (let m = amazonHost.exec(message); m; m = amazonHost.exec(message)) {
-      spans.push({ start: m.index, end: m.index + m[0].length });
-    }
-
     const merged = spans
       .sort((a, b) => a.start - b.start)
       .reduce<Array<{ start: number; end: number }>>((acc, cur) => {
@@ -86,10 +80,7 @@
     return parts.length > 0 ? parts : [{ text: message, strong: false }];
   };
 
-  $: if ($store.status === 'sync:login') {
-    const region = currentAmazonRegion();
-    progressMessage = `Connecting to ${region.hostname}…`;
-  } else if ($store.status === 'sync:cancelling') {
+  $: if ($store.status === 'sync:cancelling') {
     progressMessage = 'Cancelling sync…';
   } else if ($store.status === 'sync:cancelled') {
     const synced = $store.syncedCount ?? 0;
@@ -106,10 +97,8 @@
     } else {
       progressMessage = 'Library loaded — all up to date';
     }
-  } else if ($store?.syncMode === 'amazon') {
-    progressMessage = 'Syncing highlights from Amazon Cloud…';
   } else {
-    progressMessage = 'Syncing highlights from My Clippings…';
+    progressMessage = 'Syncing highlights…';
   }
 
   $: total = $store.jobs?.length ?? $store.totalBooks;

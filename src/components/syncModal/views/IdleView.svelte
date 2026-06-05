@@ -2,10 +2,7 @@
   import { fileStore, settingsStore } from '~/store';
   import { store } from '../store';
   import SyncStats from './SyncStats.svelte';
-  import type { SyncMode } from '~/models';
 
-  export let onSync: (mode: SyncMode) => void;
-  let selectedMode: SyncMode | '' = '';
 
   $: books = $fileStore.books;
   $: visibleCovers = books.slice(0, 36);
@@ -35,15 +32,7 @@
   $: shouldAnimate = rows.some((r) => r.length >= 12);
   $: animatedRows = shouldAnimate ? rows.map((r) => [...r, ...r]) : rows;
   $: isSyncing = $store.status.startsWith('sync:');
-  $: hasChosenSyncMethodBefore =
-    $settingsStore.hasStartedSync === true || $settingsStore.lastSyncDate != null;
-  $: lastSyncMode = $settingsStore.lastSyncMode;
-  $: if (selectedMode === '' && hasChosenSyncMethodBefore) {
-    selectedMode = lastSyncMode;
-  }
-
-  $: isSelectionValid = selectedMode !== '';
-  $: isSyncDisabled = isSyncing || !isSelectionValid;
+  $: isSyncDisabled = isSyncing;
 
   $: ignoredCount = $settingsStore.ignoredBooks?.length ?? 0;
   $: highlightsFolder = $settingsStore.highlightsFolder;
@@ -90,23 +79,7 @@
     <SyncStats />
     <div class="kp-idle--actions">
       <div class="kp-idle--controls">
-        <select class="dropdown" bind:value={selectedMode} disabled={isSyncing}>
-          <option value="" disabled>Select a sync method…</option>
-          <option value="amazon">Amazon Cloud</option>
-          <option value="my-clippings">Upload "My Clippings" file</option>
-        </select>
-
-        <button
-          class="mod-cta"
-          disabled={isSyncDisabled}
-          on:click={() => {
-            if (selectedMode !== '') {
-              onSync(selectedMode);
-            }
-          }}
-        >
-          Sync
-        </button>
+        <button class="mod-cta" disabled={isSyncDisabled}>Sync source not configured</button>
       </div>
 
       <div class="kp-idle--meta">

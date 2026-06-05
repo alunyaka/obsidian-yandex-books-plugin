@@ -31,13 +31,13 @@ describe('SyncCancellation', () => {
   });
 
   it('becomes active after start()', () => {
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     expect(cancellation.isActive).toBe(true);
     expect(cancellation.isCancelled).toBe(false);
   });
 
   it('sets cancelled flag on cancel()', () => {
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.cancel();
     expect(cancellation.isCancelled).toBe(true);
   });
@@ -49,14 +49,14 @@ describe('SyncCancellation', () => {
 
   it('emits syncCancelRequested on cancel()', () => {
     const { ee } = jest.requireMock('~/eventEmitter');
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.cancel();
     expect(ee.emit).toHaveBeenCalledWith('syncCancelRequested');
   });
 
   it('emits syncCancelled with summary on complete() after cancel', () => {
     const { ee } = jest.requireMock('~/eventEmitter');
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.setTotalCount(5);
     cancellation.incrementSynced();
     cancellation.incrementSynced();
@@ -71,7 +71,7 @@ describe('SyncCancellation', () => {
 
   it('does not emit syncCancelled on complete() without cancel', () => {
     const { ee } = jest.requireMock('~/eventEmitter');
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.setTotalCount(3);
     cancellation.incrementSynced();
     cancellation.complete();
@@ -80,7 +80,7 @@ describe('SyncCancellation', () => {
   });
 
   it('resets state after complete()', () => {
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.cancel();
     cancellation.complete();
 
@@ -89,7 +89,7 @@ describe('SyncCancellation', () => {
   });
 
   it('resets state after reset()', () => {
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.setTotalCount(10);
     cancellation.incrementSynced();
     cancellation.reset();
@@ -99,17 +99,17 @@ describe('SyncCancellation', () => {
   });
 
   it('can be reused after reset', () => {
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.cancel();
     cancellation.reset();
 
-    cancellation.start('my-clippings');
+    cancellation.start('yandex-books');
     expect(cancellation.isActive).toBe(true);
     expect(cancellation.isCancelled).toBe(false);
   });
 
   it('cancel flag stops iteration pattern', () => {
-    cancellation.start('amazon');
+    cancellation.start('yandex-books');
     cancellation.setTotalCount(5);
 
     const processed: number[] = [];

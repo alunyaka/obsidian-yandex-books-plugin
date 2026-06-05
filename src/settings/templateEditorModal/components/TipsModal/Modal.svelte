@@ -28,7 +28,7 @@
         </tr>
         <tr>
           <td><Chip title={'url'} /></td>
-          <td>Book Url on Amazon.com</td>
+          <td>Book URL</td>
         </tr>
         <tr>
           <td><Chip title={'imageUrl'} /></td>
@@ -60,7 +60,7 @@
         </tr>
         <tr>
           <td><Chip title={'authorUrl'} /></td>
-          <td>Author's page on Amazon.com</td>
+          <td>Author page URL</td>
         </tr>
         <tr>
           <td><Chip title={'highlightsCount'} /></td>

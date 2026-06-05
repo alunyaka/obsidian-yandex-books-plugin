@@ -34,26 +34,7 @@ export type BookMetadata = {
   authorUrl?: string;
 };
 
-export type SyncMode = 'amazon' | 'my-clippings';
-
-export type AmazonAccountRegion =
-  | 'global'
-  | 'india'
-  | 'japan'
-  | 'spain'
-  | 'germany'
-  | 'italy'
-  | 'UK'
-  | 'france'
-  | 'netherlands'
-  | 'canada';
-
-export type AmazonAccount = {
-  name: string;
-  hostname: string;
-  kindleReaderUrl: string;
-  notebookUrl: string;
-};
+export type SyncMode = 'yandex-books';
 
 export type KindleFrontmatter = {
   bookId: string;

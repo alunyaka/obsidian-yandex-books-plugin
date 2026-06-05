@@ -1,34 +1,25 @@
-# Architecture — obsidian-kindle-plugin
+# Architecture — obsidian-yandex-books-plugin
 
 ## Key Files
 
-| File                         | Purpose                                                            |
-| ---------------------------- | ------------------------------------------------------------------ |
-| `src/index.ts`               | Plugin entry point. Registers commands, settings tab, sync-on-boot |
-| `src/scraper/scrapeBooks.ts` | Core scraping logic. Hits Amazon Kindle Reader                     |
-| `src/scraper/session.ts`     | Amazon session management (login/logout)                           |
-| `src/fileManager/index.ts`   | Reads/writes highlight files to vault. Handles properties format   |
-| `src/amazonRegion.ts`        | Amazon region definitions (10 regions supported)                   |
-| `src/models.ts`              | TypeScript interfaces (Book, BookHighlight, etc.)                  |
+| File                       | Purpose                                                          |
+| -------------------------- | ---------------------------------------------------------------- |
+| `src/index.ts`             | Plugin entry point. Registers commands, settings tab, status UI  |
+| `src/fileManager/index.ts` | Reads/writes highlight files to the vault and handles properties |
+| `src/sync/syncManager`     | Core book/highlight sync orchestration for future source adapters |
+| `src/sync/diffManager`     | Applies highlight diffs to existing notes                        |
+| `src/rendering`            | Nunjucks-based note and highlight rendering                      |
+| `src/models.ts`            | TypeScript interfaces for books, highlights, metadata, files     |
 
-## Sync Behavior
+## Sync Core
 
-- `diffBooks()` determines what to sync. Uses `updatedSince()` with `lastSyncDate`
-- If `lastSyncDate` is old/stale, ALL books come through (expected, not a bug)
-- Sync-on-boot uses `setTimeout` (from PR #328) to avoid "taking too long to load"
-- After a full re-sync, subsequent syncs are incremental
+- Source adapters should provide `Book` and `Highlight[]` data to `SyncManager`.
+- `SyncManager.filterBooksToSync()` compares incoming books against vault files and ignored-title settings.
+- `SyncManager.syncBook()` creates new notes or resyncs existing notes through `DiffManager`.
+- Provider-specific login, scraping, and parsing logic should live outside the sync core.
 
-## Properties Format (v2.0.0)
+## Properties Format
 
-- Files use Obsidian's native properties/frontmatter format (introduced in PR #328)
-- Migration is a **manual command**: `Kindle: Migrate properties to new format`
-- Backward compatible — plugin reads both old and new format
-- No automatic migration prompt on startup (potential future enhancement)
-
-## Amazon Regions
-
-10 regions supported as of v2.0.0:
-
-`.com`, `.co.uk`, `.co.jp`, `.de`, `.fr`, `.es`, `.it`, `.in`, `.nl`, `.ca`
-
-Regions are defined in `src/amazonRegion.ts`. Product page URLs and scraping endpoints are region-aware.
+- Files use Obsidian's native properties/frontmatter format.
+- Migration remains a manual command: `Kindle: Migrate properties to new format`.
+- The file manager still reads both old nested frontmatter and the newer flat property format.

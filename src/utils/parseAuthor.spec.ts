@@ -31,7 +31,7 @@ describe('parseAuthor', () => {
   });
 
   // Issue #306: "LastName, FirstName and LastName2, FirstName2" format
-  // Amazon commonly uses this format. The old regex split on both comma and "and"
+  // Catalog providers commonly use this format. The old regex split on both comma and "and"
   // simultaneously, destroying the LastName/FirstName pairing.
   it('correctly parses "LastName, FirstName and LastName2, FirstName2" format', () => {
     const authors = parseAuthors('Kegan, Robert and Lahey, Lisa Laskow');

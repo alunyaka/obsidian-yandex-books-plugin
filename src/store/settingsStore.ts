@@ -2,20 +2,16 @@ import { writable } from 'svelte/store';
 
 import type KindlePlugin from '~/.';
 import { ee } from '~/eventEmitter';
-import type { AmazonAccountRegion, SyncMode } from '~/models';
+import type { SyncMode } from '~/models';
 
 type Settings = {
-  amazonRegion: AmazonAccountRegion;
   highlightsFolder: string;
   lastSyncDate?: Date;
   lastSyncMode: SyncMode;
   hasStartedSync?: boolean;
-  isLoggedIn: boolean;
   fileTemplate?: string;
   highlightTemplate?: string;
   fileNameTemplate?: string;
-  syncOnBoot: boolean;
-  downloadBookMetadata: boolean;
   ignoredBooks: string[];
 
   // Deprecated - delete eventually
@@ -24,13 +20,9 @@ type Settings = {
 };
 
 const DEFAULT_SETTINGS: Settings = {
-  amazonRegion: 'global',
   highlightsFolder: '/',
-  lastSyncMode: 'amazon',
+  lastSyncMode: 'yandex-books',
   hasStartedSync: false,
-  isLoggedIn: false,
-  syncOnBoot: false,
-  downloadBookMetadata: true,
   ignoredBooks: [],
 };
 
@@ -97,20 +89,6 @@ const createSettingsStore = () => {
     });
   };
 
-  const login = () => {
-    store.update((state) => {
-      state.isLoggedIn = true;
-      return state;
-    });
-  };
-
-  const logout = () => {
-    store.update((state) => {
-      state.isLoggedIn = false;
-      return state;
-    });
-  };
-
   const setHighlightTemplate = (value: string) => {
     store.update((state) => {
       state.highlightTemplate = value;
@@ -126,27 +104,6 @@ const createSettingsStore = () => {
     store.update((state) => ({ ...state, fileNameTemplate: value }));
   };
 
-  const setSyncOnBoot = (value: boolean) => {
-    store.update((state) => {
-      state.syncOnBoot = value;
-      return state;
-    });
-  };
-
-  const setDownloadBookMetadata = (value: boolean) => {
-    store.update((state) => {
-      state.downloadBookMetadata = value;
-      return state;
-    });
-  };
-
-  const setAmazonRegion = (value: AmazonAccountRegion) => {
-    store.update((state) => {
-      state.amazonRegion = value;
-      return state;
-    });
-  };
-
   const setIgnoredBooks = (value: string[]) => {
     store.update((state) => {
       state.ignoredBooks = value;
@@ -160,14 +117,9 @@ const createSettingsStore = () => {
     initialize,
     actions: {
       setHighlightsFolder,
-      login,
-      logout,
       setFileTemplate,
       setFileNameTemplate,
       setHighlightTemplate,
-      setSyncOnBoot,
-      setDownloadBookMetadata,
-      setAmazonRegion,
       setIgnoredBooks,
     },
   };
