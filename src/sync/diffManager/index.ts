@@ -63,7 +63,8 @@ export class DiffManager {
     remoteHighlights: Highlight[],
     diffs: DiffResult[]
   ): Promise<void> {
-    const highlightRenderer = getRenderers().highlightRenderer;
+    const renderers = getRenderers();
+    const highlightRenderer = renderers.highlightRenderer;
 
     const insertList = diffs
       .filter((d) => d.nextRenderedHighlight)
@@ -81,11 +82,12 @@ export class DiffManager {
       .append(appendList)
       .toString();
 
-    await this.fileManager.updateFile(
-      this.syncedBookFile,
-      remoteBook,
-      modifiedFileContents,
-      remoteHighlights.length
-    );
+    const renderedFile = renderers.fileRenderer.render({
+      book: remoteBook,
+      highlights: remoteHighlights,
+      metadata: {},
+    });
+
+    await this.fileManager.updateFile(this.syncedBookFile, modifiedFileContents, renderedFile);
   }
 }

@@ -66,6 +66,10 @@
           <td><Chip title={'highlights'} /></td>
           <td>Block of book highlights <span class="mute">- (always set)</span></td>
         </tr>
+        <tr>
+          <td><Chip title={'title | yaml'} /></td>
+          <td>Escape a value for YAML properties</td>
+        </tr>
       </tbody>
     </table>
   {:else if template === 'highlight'}

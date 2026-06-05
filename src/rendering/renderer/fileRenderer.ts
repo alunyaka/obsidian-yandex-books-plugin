@@ -7,6 +7,18 @@ import { TrimAllEmptyLinesExtension } from '../nunjucks.extensions';
 import HighlightRenderer from './highlightRenderer';
 import { fileTemplateVariables } from './templateVariables';
 
+const yamlScalar = (value: unknown): string => {
+  if (value == null || value === '') {
+    return '';
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return JSON.stringify(String(value));
+};
+
 export default class FileRenderer {
   private nunjucks: Environment;
   private highlightRenderer: HighlightRenderer;
@@ -14,6 +26,7 @@ export default class FileRenderer {
   constructor(private fileTemplate: string, highlightTemplate: string) {
     this.nunjucks = new Environment(null, { autoescape: false });
     this.nunjucks.addExtension('Trim', new TrimAllEmptyLinesExtension());
+    this.nunjucks.addFilter('yaml', yamlScalar);
 
     this.highlightRenderer = new HighlightRenderer(highlightTemplate);
   }

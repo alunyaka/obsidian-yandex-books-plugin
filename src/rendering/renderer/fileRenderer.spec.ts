@@ -177,5 +177,32 @@ describe('FileRenderer', () => {
       const renderer = new FileRenderer(fileTemplate, '- {{text}}');
       expect(renderer.render(bookHighlight)).toBe(renderedContent);
     });
+
+    it('renders editable YAML properties from file template', () => {
+      const bookHighlight: BookHighlight = {
+        book: {
+          id: 'book:1',
+          title: 'Title with "quotes": extended',
+          author: 'Test Author',
+        },
+        highlights: [],
+      };
+
+      const fileTemplate = `---
+book-id: {{ bookId | yaml }}
+book-title: {{ longTitle | yaml }}
+---
+# {{title}}
+`;
+
+      const renderer = new FileRenderer(fileTemplate, '');
+
+      expect(renderer.render(bookHighlight)).toBe(`---
+book-id: "book:1"
+book-title: "Title with \\"quotes\\": extended"
+---
+# Title with "quotes"
+`);
+    });
   });
 });

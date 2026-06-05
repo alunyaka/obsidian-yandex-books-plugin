@@ -4,9 +4,8 @@ import { get } from 'svelte/store';
 
 import type { Book, BookMetadata, SyncedBookFile, YandexBooksFrontmatter } from '~/models';
 import { settingsStore } from '~/store';
-import { mergeFrontmatter } from '~/utils';
 
-import { bookFilePath, bookToFrontMatter, frontMatterToBook } from './mappers';
+import { bookFilePath, frontMatterToBook } from './mappers';
 
 const SyncingStateKey = 'yandex-books-sync';
 const PropertyPrefix = 'yandex-books-';
@@ -178,11 +177,10 @@ export default class FileManager {
   public async createFile(
     book: Book,
     metadata: BookMetadata,
-    content: string,
-    highlightsCount: number
+    content: string
   ): Promise<void> {
     const filePath = this.generateUniqueFilePath(book, metadata);
-    const frontmatterContent = this.generateBookContent(book, content, highlightsCount);
+    const frontmatterContent = this.generateBookContent(content);
 
     try {
       await this.vault.create(filePath, frontmatterContent);
@@ -197,11 +195,10 @@ export default class FileManager {
 
   public async updateFile(
     syncedBookFile: SyncedBookFile,
-    remoteBook: Book,
     content: string,
-    highlightsCount: number
+    frontmatterSource?: string
   ): Promise<void> {
-    const frontmatterContent = this.generateBookContent(remoteBook, content, highlightsCount);
+    const frontmatterContent = this.generateBookContent(content, frontmatterSource);
 
     try {
       await this.vault.modify(syncedBookFile.file, frontmatterContent);
@@ -217,31 +214,21 @@ export default class FileManager {
   /**
    * Generate book content by combining both book (a) book markdown and
    * (b) rendered book highlights
-   * Uses flat properties format compatible with Obsidian's properties system
+   * Properties are controlled by the file template frontmatter.
    */
-  private generateBookContent(book: Book, content: string, highlightsCount: number): string {
-    const frontmatter = bookToFrontMatter(book, highlightsCount);
-    
-    // Use flat properties format for better Obsidian compatibility
-    const flatProperties: Record<string, any> = {
-      [`${PropertyPrefix}bookId`]: frontmatter.bookId,
-      [`${PropertyPrefix}title`]: frontmatter.title,
-      [`${PropertyPrefix}author`]: frontmatter.author,
-      [`${PropertyPrefix}highlightsCount`]: frontmatter.highlightsCount,
-    };
-    
-    // Only add optional fields if they exist
-    if (frontmatter.bookUrl) {
-      flatProperties[`${PropertyPrefix}bookUrl`] = frontmatter.bookUrl;
+  private generateBookContent(content: string, frontmatterSource?: string): string {
+    if (frontmatterSource == null) {
+      return content;
     }
-    if (frontmatter.lastAnnotatedDate) {
-      flatProperties[`${PropertyPrefix}lastAnnotatedDate`] = frontmatter.lastAnnotatedDate;
+
+    const { data: nextFrontmatter } = matter(frontmatterSource);
+    const { data: currentFrontmatter, content: markdownContent } = matter(content);
+
+    if (Object.keys(nextFrontmatter).length === 0) {
+      return content;
     }
-    if (frontmatter.bookImageUrl) {
-      flatProperties[`${PropertyPrefix}bookImageUrl`] = frontmatter.bookImageUrl;
-    }
-    
-    return mergeFrontmatter(content, flatProperties);
+
+    return matter.stringify(markdownContent, { ...currentFrontmatter, ...nextFrontmatter });
   }
 
   private generateUniqueFilePath(book: Book, metadata: BookMetadata): string {

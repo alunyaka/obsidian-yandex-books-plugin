@@ -1,3 +1,12 @@
+---
+yandex-books-bookId: {{ bookId | yaml }}
+yandex-books-title: {{ longTitle | yaml }}
+yandex-books-author: {{ author | yaml }}
+yandex-books-highlightsCount: {{ highlightsCount }}
+{% if url %}yandex-books-bookUrl: {{ url | yaml }}{% endif %}
+{% if lastAnnotatedDate %}yandex-books-lastAnnotatedDate: {{ lastAnnotatedDate | yaml }}{% endif %}
+{% if imageUrl %}yandex-books-bookImageUrl: {{ imageUrl | yaml }}{% endif %}
+---
 # {{title}}
 ## Metadata
 {% trim %}
