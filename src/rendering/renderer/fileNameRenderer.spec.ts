@@ -1,4 +1,5 @@
 import type { Book, BookMetadata } from '~/models';
+import { DefaultFileNameTemplate } from '~/rendering';
 
 import FileNameRenderer from './fileNameRenderer';
 
@@ -26,7 +27,7 @@ describe('FileNameRenderer', () => {
         title: 'Immunity to change: How to overcome it',
       };
       const metadata: Partial<BookMetadata> = {
-        publicationDate: '2010'
+        publicationDate: '2010',
       };
 
       const renderer = new FileNameRenderer('{{shortTitle}}');
@@ -38,11 +39,13 @@ describe('FileNameRenderer', () => {
         title: 'Immunity to change: How to overcome it',
       };
       const metadata: Partial<BookMetadata> = {
-        publicationDate: '2010'
+        publicationDate: '2010',
       };
 
       const renderer = new FileNameRenderer('{{longTitle}}');
-      expect(renderer.render(book, metadata)).toBe('Immunity to change - How to overcome it.md');
+      expect(renderer.render(book, metadata)).toBe(
+        'Immunity to change - How to overcome it.md'
+      );
     });
 
     it('File name with author', () => {
@@ -51,7 +54,7 @@ describe('FileNameRenderer', () => {
         author: 'John Doe',
       };
       const metadata: Partial<BookMetadata> = {
-        publicationDate: '2010'
+        publicationDate: '2010',
       };
 
       const renderer = new FileNameRenderer('{{author}}');
@@ -64,7 +67,7 @@ describe('FileNameRenderer', () => {
         author: 'John Doe',
       };
       const metadata: Partial<BookMetadata> = {
-        publicationDate: '2010'
+        publicationDate: '2010',
       };
 
       const renderer = new FileNameRenderer('{{publicationDate}} - {{author}}');
@@ -180,6 +183,20 @@ describe('FileNameRenderer', () => {
       expect(result).toBe('Deep Work - Rules for Focused Success.md');
     });
 
+    it('replaces Obsidian-forbidden filename characters with dashes', () => {
+      const book: Partial<Book> = {
+        title: 'One\\Two/Three: Four',
+        author: 'Test Author',
+      };
+      const metadata: Partial<BookMetadata> = {};
+
+      const renderer = new FileNameRenderer('{{longTitle}}');
+      const result = renderer.render(book, metadata);
+
+      expect(result).toBe('One - Two - Three - Four.md');
+      expect(result).not.toMatch(/[\\/:]/);
+    });
+
     // Multiple consecutive spaces should be collapsed
     it('collapses multiple consecutive spaces', () => {
       const book: Partial<Book> = {
@@ -204,6 +221,20 @@ describe('FileNameRenderer', () => {
       const renderer = new FileNameRenderer('{{longTitle}}');
       const result = renderer.render(book, metadata);
       expect(result).not.toContain('?');
+    });
+
+    it('default file name keeps full title content after forbidden separators', () => {
+      const book: Partial<Book> = {
+        title: 'Библия: Что было «на самом деле»?',
+        author: 'Андрей Десницкий',
+      };
+      const metadata: Partial<BookMetadata> = {};
+
+      const renderer = new FileNameRenderer(DefaultFileNameTemplate);
+
+      expect(renderer.render(book, metadata)).toBe(
+        'Десницкий-Библия - Что было «на самом деле».md'
+      );
     });
   });
 });

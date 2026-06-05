@@ -37,6 +37,7 @@ Tracking key decisions made and work explicitly deferred for future sessions.
 | Item                               | Reason                                      | Priority |
 | ---------------------------------- | ------------------------------------------- | -------- |
 | Private Yandex Books quotes        | REST `/quotes` returns public quotes only; GraphQL gateway requires whitelisted operations captured from the real frontend Network flow | High     |
+| Sync completion quote stats        | Final sync stats should show how many new quotes were added, not only book-level progress/status | Medium   |
 | Issue triage (75 open)             | Dedicated session needed                    | High     |
 | PR #274 (MD5 book IDs)             | Breaking change, needs migration            | Medium   |
 | `minAppVersion` update             | Needs Obsidian version research             | Low      |
