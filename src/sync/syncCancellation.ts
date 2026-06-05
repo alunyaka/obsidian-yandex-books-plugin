@@ -7,6 +7,7 @@ export class SyncCancellation {
   private _totalCount = 0;
   private _mode: SyncMode = 'yandex-books';
   private _active = false;
+  private abortController: AbortController | undefined;
 
   get isCancelled(): boolean {
     return this._cancelled;
@@ -16,12 +17,17 @@ export class SyncCancellation {
     return this._active;
   }
 
+  get signal(): AbortSignal | undefined {
+    return this.abortController?.signal;
+  }
+
   start(mode: SyncMode): void {
     this._cancelled = false;
     this._syncedCount = 0;
     this._totalCount = 0;
     this._mode = mode;
     this._active = true;
+    this.abortController = new AbortController();
   }
 
   setTotalCount(count: number): void {
@@ -37,6 +43,7 @@ export class SyncCancellation {
       return;
     }
     this._cancelled = true;
+    this.abortController?.abort();
     ee.emit('syncCancelRequested');
   }
 
@@ -49,6 +56,7 @@ export class SyncCancellation {
     }
     this._active = false;
     this._cancelled = false;
+    this.abortController = undefined;
   }
 
   reset(): void {
@@ -56,6 +64,8 @@ export class SyncCancellation {
     this._syncedCount = 0;
     this._totalCount = 0;
     this._active = false;
+    this.abortController?.abort();
+    this.abortController = undefined;
   }
 }
 

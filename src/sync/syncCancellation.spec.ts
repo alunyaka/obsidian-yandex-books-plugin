@@ -42,6 +42,15 @@ describe('SyncCancellation', () => {
     expect(cancellation.isCancelled).toBe(true);
   });
 
+  it('aborts active signal on cancel()', () => {
+    cancellation.start('yandex-books');
+    const signal = cancellation.signal;
+
+    cancellation.cancel();
+
+    expect(signal?.aborted).toBe(true);
+  });
+
   it('cancel() is a no-op when not active', () => {
     cancellation.cancel();
     expect(cancellation.isCancelled).toBe(false);
@@ -86,16 +95,20 @@ describe('SyncCancellation', () => {
 
     expect(cancellation.isActive).toBe(false);
     expect(cancellation.isCancelled).toBe(false);
+    expect(cancellation.signal).toBeUndefined();
   });
 
   it('resets state after reset()', () => {
     cancellation.start('yandex-books');
+    const signal = cancellation.signal;
     cancellation.setTotalCount(10);
     cancellation.incrementSynced();
     cancellation.reset();
 
     expect(cancellation.isActive).toBe(false);
     expect(cancellation.isCancelled).toBe(false);
+    expect(cancellation.signal).toBeUndefined();
+    expect(signal?.aborted).toBe(true);
   });
 
   it('can be reused after reset', () => {

@@ -26,6 +26,9 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
     return;
   }
 
+  syncCancellation.start(mode);
+  ee.emit('syncSessionStart', mode);
+
   const syncManager = new SyncManager(fileManager);
   const client = new YandexBooksClient(
     auth.oauthToken,
@@ -41,11 +44,8 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
       console.debug(`Yandex Books: ${message}`);
       ee.emit('syncLog', message);
     },
-    { debugQuoteLimit }
+    { debugQuoteLimit, signal: syncCancellation.signal }
   );
-
-  syncCancellation.start(mode);
-  ee.emit('syncSessionStart', mode);
 
   try {
     ee.emit('fetchingBooks');
@@ -91,6 +91,10 @@ export const syncYandexBooks = async (fileManager: FileManager): Promise<void> =
       ee.emit('syncSessionSuccess');
     }
   } catch (error) {
+    if (syncCancellation.isCancelled) {
+      return;
+    }
+
     console.error('Yandex Books: Sync failed', error);
     ee.emit('syncSessionFailure', errorMessage(error));
   } finally {

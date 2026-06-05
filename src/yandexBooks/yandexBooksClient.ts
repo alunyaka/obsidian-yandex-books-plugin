@@ -27,6 +27,7 @@ type DebugLogger = (event: YandexBooksDebugEvent) => void;
 
 type YandexBooksClientOptions = {
   debugQuoteLimit?: number;
+  signal?: AbortSignal;
 };
 
 type FetchResult = {
@@ -44,6 +45,13 @@ export class YandexBooksApiError extends Error {
   }
 }
 
+export class YandexBooksSyncCancelledError extends Error {
+  constructor() {
+    super('Yandex Books sync cancelled');
+    this.name = 'YandexBooksSyncCancelledError';
+  }
+}
+
 export default class YandexBooksClient {
   private window: BrowserWindow | undefined;
   private ready: Promise<void> | undefined;
@@ -55,11 +63,13 @@ export default class YandexBooksClient {
   ) {}
 
   public async getProfile(): Promise<YandexProfile> {
+    this.throwIfAborted();
     this.log('Loading profile');
     return this.getJson<YandexProfile>('/profile');
   }
 
   public async getBookHighlights(): Promise<BookHighlight[]> {
+    this.throwIfAborted();
     const authInfo = await readYandexAuthInfo();
     const profile = await this.getProfile();
     const userIds = this.getProfileIdentifiers(profile, authInfo.uid);
@@ -69,6 +79,7 @@ export default class YandexBooksClient {
     }
 
     const libraryCards = await this.getAllLibraryCards();
+    this.throwIfAborted();
     this.log('Loaded library cards', {
       count: libraryCards.length,
     });
@@ -78,6 +89,7 @@ export default class YandexBooksClient {
     });
 
     const quotes = await this.getAllQuotesWithFallback(userIds);
+    this.throwIfAborted();
     const quoteBookIds = this.getUniqueQuoteBookIds(quotes);
     const libraryBookIds = this.getUniqueLibraryBookIds(libraryCards);
     const libraryBooksWithoutQuotes = libraryBookIds.filter((bookId) => !quoteBookIds.includes(bookId));
@@ -93,6 +105,7 @@ export default class YandexBooksClient {
       quotes: quotes.length,
       uniqueBooks: quoteBookIds.length,
     });
+    this.throwIfAborted();
     return mapQuotesToBookHighlights(quotes);
   }
 
@@ -108,6 +121,7 @@ export default class YandexBooksClient {
     const quoteLimit = this.options.debugQuoteLimit;
 
     for (let pageNumber = 1; pageNumber <= MAX_QUOTES_PAGES; pageNumber++) {
+      this.throwIfAborted();
       const remainingQuotes =
         quoteLimit != null ? Math.max(0, quoteLimit - quotes.length) : QUOTES_PAGE_LIMIT;
 
@@ -122,6 +136,7 @@ export default class YandexBooksClient {
       const response = await this.getJson<YandexQuotesResponse>(
         `/users/${encodeURIComponent(userId)}/quotes?page=${pageNumber}&per_page=${perPage}`
       );
+      this.throwIfAborted();
 
       const page = response.quotes ?? [];
       const newQuotes = page.filter((quote) => {
@@ -161,10 +176,12 @@ export default class YandexBooksClient {
     let offset = 0;
 
     while (true) {
+      this.throwIfAborted();
       this.log('Loading library page', { limit: LIBRARY_PAGE_LIMIT, offset });
       const response = await this.getJson<YandexLibraryCardsResponse>(
         `/profile/library_cards?limit=${LIBRARY_PAGE_LIMIT}&offset=${offset}`
       );
+      this.throwIfAborted();
       const page = response.library_cards ?? [];
       libraryCards.push(...page);
       this.log('Loaded library page', { count: page.length, total: libraryCards.length });
@@ -183,6 +200,7 @@ export default class YandexBooksClient {
     let lastError: unknown;
 
     for (const userId of userIds) {
+      this.throwIfAborted();
       this.log('Trying quotes identifier', { source: userId.source });
 
       try {
@@ -203,9 +221,11 @@ export default class YandexBooksClient {
   }
 
   private async getJson<T>(path: string): Promise<T> {
+    this.throwIfAborted();
     const url = path.startsWith('http') ? path : `${REST_BASE_URL}${path}`;
     const label = this.requestLabel(url);
     const result = await this.fetchFromYandexSession(url);
+    this.throwIfAborted();
 
     this.log('API response', {
       path: label,
@@ -232,7 +252,9 @@ export default class YandexBooksClient {
   }
 
   private async fetchFromYandexSession(url: string): Promise<FetchResult> {
+    this.throwIfAborted();
     await this.ensureReady();
+    this.throwIfAborted();
 
     const script = `
       fetch(${JSON.stringify(url)}, {
@@ -256,9 +278,22 @@ export default class YandexBooksClient {
       }))
     `;
 
+    let rejectAbort: (error: YandexBooksSyncCancelledError) => void;
+    const abortPromise = new Promise<never>((_resolve, reject) => {
+      rejectAbort = reject;
+    });
+    const abortFetch = () => {
+      this.log('Aborting active API request', { path: this.requestLabel(url) });
+      this.destroy();
+      rejectAbort(new YandexBooksSyncCancelledError());
+    };
+
     try {
-      return await this.window.webContents.executeJavaScript<FetchResult>(script);
+      this.options.signal?.addEventListener('abort', abortFetch, { once: true });
+      const fetchPromise = this.window.webContents.executeJavaScript<FetchResult>(script);
+      return await Promise.race([fetchPromise, abortPromise]);
     } catch (error) {
+      this.throwIfAborted();
       this.log('API fetch failed before HTTP response', {
         path: this.requestLabel(url),
         error: String(error),
@@ -266,10 +301,13 @@ export default class YandexBooksClient {
       throw new YandexBooksApiError(
         `Yandex Books API network request failed for ${this.requestLabel(url)}: ${String(error)}`
       );
+    } finally {
+      this.options.signal?.removeEventListener('abort', abortFetch);
     }
   }
 
   private async ensureReady(): Promise<void> {
+    this.throwIfAborted();
     if (this.ready != null) {
       return this.ready;
     }
@@ -289,8 +327,18 @@ export default class YandexBooksClient {
     });
 
     this.ready = new Promise((resolve, reject) => {
-      this.window.webContents.once('did-finish-load', resolve);
+      const abortReady = () => {
+        this.destroy();
+        reject(new YandexBooksSyncCancelledError());
+      };
+
+      this.options.signal?.addEventListener('abort', abortReady, { once: true });
+      this.window.webContents.once('did-finish-load', () => {
+        this.options.signal?.removeEventListener('abort', abortReady);
+        resolve();
+      });
       this.window.webContents.once('did-fail-load', () => {
+        this.options.signal?.removeEventListener('abort', abortReady);
         reject(new YandexBooksApiError('Could not initialize Yandex Books session window'));
       });
       this.window.loadURL(API_ORIGIN);
@@ -301,6 +349,12 @@ export default class YandexBooksClient {
 
   private log(message: string, details?: YandexBooksDebugEvent['details']): void {
     this.debug?.({ message, details });
+  }
+
+  private throwIfAborted(): void {
+    if (this.options.signal?.aborted) {
+      throw new YandexBooksSyncCancelledError();
+    }
   }
 
   private getProfileIdentifiers(
