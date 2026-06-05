@@ -1,8 +1,9 @@
 import _ from 'lodash';
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import { get } from 'svelte/store';
 
 import type KindlePlugin from '~/.';
+import { clearYandexSession, readYandexAuthInfo, YandexLoginModal } from '~/auth';
 import type FileManager from '~/fileManager';
 import { settingsStore } from '~/store';
 
@@ -24,6 +25,7 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     this.templatesEditor();
+    this.yandexAccount();
     this.highlightsFolder();
     this.ignoredBooks();
     this.sponsorMe();
@@ -39,6 +41,72 @@ export class SettingsTab extends PluginSettingTab {
           .onClick(() => {
             new TemplateEditorModal(this.app).show();
           });
+      });
+  }
+
+  private yandexAccount(): void {
+    const auth = get(settingsStore).yandexAuth;
+    const desc = auth.isLoggedIn
+      ? `Connected${auth.login ? ` as ${auth.login}` : ''}${
+          auth.lastCheckedAt ? ` - checked ${new Date(auth.lastCheckedAt).toLocaleString()}` : ''
+        }`
+      : 'Connect your Yandex account in a separate browser session. Cookies stay in Electron storage and are not saved in plugin settings.';
+
+    new Setting(this.containerEl)
+      .setName('Yandex Books account')
+      .setDesc(desc)
+      .addButton((button) => {
+        button.setButtonText(auth.isLoggedIn ? 'Reconnect' : 'Connect').onClick(async () => {
+          button.setDisabled(true).setButtonText('Connecting...');
+
+          try {
+            const authInfo = await new YandexLoginModal().open();
+
+            if (authInfo?.isLoggedIn) {
+              settingsStore.actions.setYandexAuth(authInfo);
+              new Notice('Yandex Books account connected');
+            } else {
+              new Notice('Yandex Books login was not completed');
+            }
+          } catch (error) {
+            console.error('Error connecting Yandex Books account:', error);
+            new Notice(`Could not connect Yandex Books account: ${String(error)}`);
+          }
+
+          this.display();
+        });
+      })
+      .addButton((button) => {
+        button.setButtonText('Refresh').onClick(async () => {
+          button.setDisabled(true).setButtonText('Checking...');
+
+          try {
+            const authInfo = await readYandexAuthInfo();
+            settingsStore.actions.setYandexAuth(authInfo);
+            new Notice(authInfo.isLoggedIn ? 'Yandex Books session is active' : 'Not logged in');
+          } catch (error) {
+            console.error('Error checking Yandex Books account:', error);
+            new Notice(`Could not check Yandex Books account: ${String(error)}`);
+          }
+
+          this.display();
+        });
+      })
+      .addButton((button) => {
+        button.setButtonText('Sign out').setDisabled(!auth.isLoggedIn).onClick(async () => {
+          button.setDisabled(true).setButtonText('Signing out...');
+
+          try {
+            await clearYandexSession();
+            settingsStore.actions.setYandexAuth({ isLoggedIn: false });
+            new Notice('Signed out of Yandex Books');
+          } catch (error) {
+            console.error('Error signing out of Yandex Books:', error);
+            new Notice(`Could not sign out of Yandex Books: ${String(error)}`);
+          }
+
+          this.display();
+        });
       });
   }
 

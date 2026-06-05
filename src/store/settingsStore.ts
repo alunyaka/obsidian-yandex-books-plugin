@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 
 import type KindlePlugin from '~/.';
+import type { YandexAuthInfo } from '~/auth';
 import { ee } from '~/eventEmitter';
 import type { SyncMode } from '~/models';
 
@@ -12,6 +13,7 @@ type Settings = {
   fileTemplate?: string;
   highlightTemplate?: string;
   fileNameTemplate?: string;
+  yandexAuth: YandexAuthInfo;
   ignoredBooks: string[];
 
   // Deprecated - delete eventually
@@ -23,6 +25,9 @@ const DEFAULT_SETTINGS: Settings = {
   highlightsFolder: '/',
   lastSyncMode: 'yandex-books',
   hasStartedSync: false,
+  yandexAuth: {
+    isLoggedIn: false,
+  },
   ignoredBooks: [],
 };
 
@@ -111,6 +116,13 @@ const createSettingsStore = () => {
     });
   };
 
+  const setYandexAuth = (value: YandexAuthInfo) => {
+    store.update((state) => {
+      state.yandexAuth = value;
+      return state;
+    });
+  };
+
   return {
     store,
     subscribe: store.subscribe,
@@ -120,6 +132,7 @@ const createSettingsStore = () => {
       setFileTemplate,
       setFileNameTemplate,
       setHighlightTemplate,
+      setYandexAuth,
       setIgnoredBooks,
     },
   };
