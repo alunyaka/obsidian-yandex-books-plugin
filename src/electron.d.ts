@@ -1,6 +1,7 @@
 declare module 'electron' {
   type BrowserWindowOptions = {
     height?: number;
+    show?: boolean;
     title?: string;
     webPreferences?: {
       contextIsolation?: boolean;
@@ -15,11 +16,14 @@ declare module 'electron' {
     isDestroyed(): boolean;
     loadURL(url: string): void;
     on(event: 'closed', listener: () => void): void;
+    once(event: 'ready-to-show', listener: () => void): void;
     webContents: {
+      executeJavaScript<T = unknown>(code: string): Promise<T>;
       on(
         event: 'did-navigate' | 'did-navigate-in-page',
         listener: (event: unknown, url: string) => void
       ): void;
+      once(event: 'did-finish-load' | 'did-fail-load', listener: () => void): void;
     };
   };
 

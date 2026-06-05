@@ -133,7 +133,7 @@ export default class KindlePlugin extends Plugin {
   }
 
   private showSyncModal(): void {
-    new SyncModal(this.app).show();
+    new SyncModal(this.app, this.fileManager).show();
   }
 
   private async migrateProperties(): Promise<void> {

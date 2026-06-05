@@ -4,10 +4,11 @@
   import { store } from './store';
 
   export let onDone: () => void;
+  export let onSync: () => void;
 </script>
 
 {#if $store.status === 'idle'}
-  <IdleView />
+  <IdleView {onSync} />
 {:else if $store.status.startsWith('sync:')}
   <SyncingView {onDone} />
 {/if}

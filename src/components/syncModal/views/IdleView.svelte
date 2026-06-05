@@ -3,6 +3,7 @@
   import { store } from '../store';
   import SyncStats from './SyncStats.svelte';
 
+  export let onSync: () => void;
 
   $: books = $fileStore.books;
   $: visibleCovers = books.slice(0, 36);
@@ -32,7 +33,9 @@
   $: shouldAnimate = rows.some((r) => r.length >= 12);
   $: animatedRows = shouldAnimate ? rows.map((r) => [...r, ...r]) : rows;
   $: isSyncing = $store.status.startsWith('sync:');
-  $: isSyncDisabled = isSyncing;
+  $: isLoggedIn = $settingsStore.yandexAuth?.isLoggedIn ?? false;
+  $: isSyncDisabled = isSyncing || !isLoggedIn;
+  $: syncButtonText = isLoggedIn ? 'Sync Yandex Books' : 'Connect Yandex Books in settings';
 
   $: ignoredCount = $settingsStore.ignoredBooks?.length ?? 0;
   $: highlightsFolder = $settingsStore.highlightsFolder;
@@ -79,7 +82,7 @@
     <SyncStats />
     <div class="kp-idle--actions">
       <div class="kp-idle--controls">
-        <button class="mod-cta" disabled={isSyncDisabled}>Sync source not configured</button>
+        <button class="mod-cta" disabled={isSyncDisabled} on:click={onSync}>{syncButtonText}</button>
       </div>
 
       <div class="kp-idle--meta">

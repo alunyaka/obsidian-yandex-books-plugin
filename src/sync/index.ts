@@ -1,4 +1,5 @@
 import { syncCancellation } from './syncCancellation';
 import SyncManager from './syncManager';
+import { syncYandexBooks } from './syncYandexBooks';
 
-export { syncCancellation, SyncManager };
+export { syncCancellation, syncYandexBooks, SyncManager };
